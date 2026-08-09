@@ -79,7 +79,7 @@ def _extract_required_components(exp_data: Optional[dict]) -> str:
     lines = []
     for c in exp_data.get("components", []):
         name = c.get("name", "Unknown component")
-        spec = c.get("spec", "")
+        spec = c.get("spec", "").replace("Ω", " ohms").replace("μ", "u")
         qty  = c.get("quantity", 1)
         line = f"  - {name}"
         if spec:
@@ -91,78 +91,41 @@ def _extract_required_components(exp_data: Optional[dict]) -> str:
     hints = exp_data.get("circuit_diagnosis_hints", [])
     hint_block = ""
     if hints:
-        hint_block = "\n\nCircuit wiring hints (from lab manual):\n" + "\n".join(f"  - {h}" for h in hints)
+        hint_block = "\n\nCircuit wiring hints (from lab manual):\n" + "\n".join(f"  - {h.replace('Ω', ' ohms').replace('μ', 'u')}" for h in hints)
 
     return "\n".join(lines) + hint_block
 
 
 def _build_gemini_prompt(exp_data: Optional[dict], exp_id: str) -> str:
     """Construct the structured prompt sent to Gemini Vision."""
-    if exp_data:
-        exp_title       = exp_data.get("title", exp_id)
-        exp_aim         = exp_data.get("aim", "")
-        components_text = _extract_required_components(exp_data)
-    else:
-        exp_title       = exp_id
-        exp_aim         = ""
-        components_text = "No component list available."
+    title      = exp_data.get("title", exp_id) if exp_data else exp_id
+    aim        = exp_data.get("aim", "Verify circuit operation.") if exp_data else ""
+    components = _extract_required_components(exp_data)
 
-    return f"""You are an expert ECE laboratory instructor AI. A student has uploaded a photo of their assembled breadboard circuit.
+    prompt = f"""You are an expert Electronics and Communication Engineering (ECE) professor and breadboard circuit inspector.
+Inspect this breadboard photo for the following laboratory experiment:
 
-ACTIVE EXPERIMENT: "{exp_title}"
-AIM: {exp_aim}
+EXPERIMENT: {title}
+AIM: {aim}
 
-REQUIRED COMPONENTS FOR THIS EXPERIMENT:
-{components_text}
+REQUIRED COMPONENTS:
+{components}
 
-YOUR TASK: Carefully analyse the uploaded breadboard photo and produce a JSON fault report.
+Analyze the photo and provide a structured JSON response with:
+1. is_breadboard_image: boolean (true if image shows an electronic breadboard/circuit, false otherwise)
+2. inappropriate_reason: string or null (if false, explain why)
+3. detected_components: list of objects with {{"type": string, "count": int, "location": string, "notes": string}}
+4. wiring_observations: list of strings describing key connections observed
+5. faults: list of detected wiring errors, wrong components, polarity errors, missing connections
+   Each fault: {{"type": "MISSING_COMPONENT"|"WRONG_COMPONENT"|"POLARITY_REVERSED"|"SHORT_CIRCUIT"|"MISSING_RAIL"|"CIRCUIT_MISMATCH"|"LOOSE_WIRE",
+                "component": string, "severity": "CRITICAL"|"HIGH"|"MEDIUM"|"LOW", "location": string, "description": string, "fix": string}}
+6. series_parallel_errors: list of strings
+7. short_circuit_risks: list of strings
+8. overall_match_score: float from 0.0 to 1.0
+9. summary: brief 1-2 sentence overall summary of the assembly
 
-FAULT CATEGORIES TO CHECK:
-1. inappropriate_image - Is this even a breadboard circuit photo? Reject random/unrelated photos.
-2. missing_component - Is any required component absent from the breadboard?
-3. wrong_component - Is a different component used instead of the required one?
-4. reversed_polarity - Is a diode/LED/electrolytic capacitor inserted backwards?
-5. series_parallel_error - Are components that should be in series wired in parallel or vice versa?
-6. short_circuit_risk - Are any breadboard rows bridged that should not be?
-7. wrong_ic_number - Is a different IC used than required?
-8. missing_power_rail - Are VCC or GND connections missing or incomplete?
-9. open_circuit - Is any section of the circuit visually disconnected?
-10. circuit_mismatch - Is the overall circuit completely different from the required experiment?
-
-RESPONSE FORMAT (return ONLY valid JSON, no markdown, no extra text):
-{{
-  "is_breadboard_image": true,
-  "inappropriate_reason": null,
-  "detected_components": [
-    {{"type": "resistor", "count": 1, "location": "top-left quadrant", "notes": "appears correct"}},
-    {{"type": "diode", "count": 1, "location": "center", "notes": "band facing left - may be reversed"}}
-  ],
-  "wiring_observations": [
-    "Jumper wire connects column 10 row A to power rail"
-  ],
-  "faults": [
-    {{
-      "type": "Reversed Polarity",
-      "component": "Diode D1",
-      "severity": "CRITICAL",
-      "location": "center of breadboard",
-      "description": "The cathode silver band is facing the positive supply rail. Diode is in reverse bias, no current will flow.",
-      "fix": "Remove the diode and rotate it 180 degrees. The silver band (cathode) must face the GND side."
-    }}
-  ],
-  "series_parallel_errors": [],
-  "short_circuit_risks": [],
-  "overall_match_score": 0.75,
-  "summary": "Circuit mostly correct but diode polarity is reversed."
-}}
-
-RULES:
-- If the image does NOT show a breadboard or electronic circuit, set is_breadboard_image to false and fill inappropriate_reason.
-- If the image shows a breadboard for a COMPLETELY different experiment, add a circuit_mismatch fault with severity CRITICAL.
-- overall_match_score must be 0.0 to 1.0 (1.0 = perfect, 0.0 = completely wrong).
-- Be specific about location (e.g. top-left of breadboard, row 15 column E).
-- If no faults are found, return an empty faults array.
-- Return ONLY the JSON object, nothing else."""
+Return ONLY a raw JSON object adhering to this structure without markdown code fences."""
+    return prompt
 
 
 # ---------------------------------------------------------------------------
@@ -179,16 +142,17 @@ def _encode_image_base64(image_path: str) -> Optional[str]:
 
 def run_gemini_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[dict]) -> Optional[dict]:
     """Calls Gemini Vision and returns a structured fault dict. Returns None on failure."""
-    if not GEMINI_API_KEY:
+    active_key = os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY
+    if not active_key:
         print("Gemini API key not set.")
         return None
 
     prompt = _build_gemini_prompt(exp_data, exp_id)
 
-    # SDK path (google.genai)
+    # 1. SDK path (google.genai)
     if GENAI_AVAILABLE:
         try:
-            client = genai_new.Client(api_key=GEMINI_API_KEY)
+            client = genai_new.Client(api_key=active_key)
             with open(image_path, "rb") as img_file:
                 img_bytes = img_file.read()
             ext       = os.path.splitext(image_path)[1].lower()
@@ -198,13 +162,14 @@ def run_gemini_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[
             response   = client.models.generate_content(
                 model="gemini-2.5-flash",
                 contents=[prompt, image_part],
-                config=genai_types.GenerateContentConfig(temperature=0.1, max_output_tokens=2048)
+                config=genai_types.GenerateContentConfig(temperature=0.1, max_output_tokens=4096)
             )
-            return _parse_gemini_json(response.text.strip())
+            if response.text:
+                return _parse_gemini_json(response.text.strip())
         except Exception as e:
             print(f"Gemini SDK path failed: {e}")
 
-    # REST fallback
+    # 2. Direct REST fallback (safe UTF-8 / JSON encoding)
     try:
         import requests
         b64_image = _encode_image_base64(image_path)
@@ -218,41 +183,73 @@ def run_gemini_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[
                 {"text": prompt},
                 {"inline_data": {"mime_type": mime_type, "data": b64_image}}
             ]}],
-            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 2048}
+            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}
         }
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_API_KEY}"
-        r   = requests.post(url, json=payload, timeout=45)
-        r.raise_for_status()
-        raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-        return _parse_gemini_json(raw)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={active_key}"
+        headers = {"Content-Type": "application/json; charset=utf-8"}
+        r = requests.post(url, data=json.dumps(payload, ensure_ascii=True), headers=headers, timeout=45)
+        if r.status_code == 200:
+            raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+            return _parse_gemini_json(raw)
+        else:
+            print(f"Gemini REST returned status {r.status_code}: {r.text}")
     except Exception as e:
         print(f"Gemini REST API path failed: {e}")
-        return None
+    return None
 
 
 def _parse_gemini_json(raw_text: str) -> Optional[dict]:
-    """Safely parse JSON from Gemini response, stripping any markdown fences."""
+    """Safely parse JSON from Gemini response with truncation auto-repair."""
     text  = re.sub(r"```(?:json)?", "", raw_text).strip().rstrip("`").strip()
     start = text.find("{")
-    end   = text.rfind("}") + 1
-    if start == -1 or end == 0:
+    if start == -1:
         print(f"No JSON in Gemini response:\n{raw_text[:300]}")
         return None
+
+    candidate = text[start:]
+    
+    # 1. Try clean parse
     try:
-        result = json.loads(text[start:end])
-        result.setdefault("is_breadboard_image", True)
-        result.setdefault("inappropriate_reason", None)
-        result.setdefault("detected_components", [])
-        result.setdefault("wiring_observations", [])
-        result.setdefault("faults", [])
-        result.setdefault("series_parallel_errors", [])
-        result.setdefault("short_circuit_risks", [])
-        result.setdefault("overall_match_score", 0.5)
-        result.setdefault("summary", "Analysis complete.")
-        return result
-    except json.JSONDecodeError as e:
-        print(f"JSON parse error: {e}")
+        res = json.loads(candidate)
+        return _normalize_vision_result(res)
+    except Exception:
+        pass
+
+    # 2. Try parsing up to last closing brace
+    end = candidate.rfind("}") + 1
+    if end > 0:
+        try:
+            res = json.loads(candidate[:end])
+            return _normalize_vision_result(res)
+        except Exception:
+            pass
+
+    # 3. Auto-repair truncated JSON (cut off string / brackets)
+    try:
+        # Strip trailing unclosed string / comma
+        repaired = re.sub(r',\s*"[^"]*":?\s*[^,}]*$', '', candidate)
+        repaired = re.sub(r',\s*$', '', repaired)
+        open_braces = repaired.count("{") - repaired.count("}")
+        open_brackets = repaired.count("[") - repaired.count("]")
+        repaired += ("]" * max(0, open_brackets)) + ("}" * max(0, open_braces))
+        res = json.loads(repaired)
+        return _normalize_vision_result(res)
+    except Exception as e:
+        print(f"Vision JSON repair failed ({e}) on response:\n{raw_text[:300]}")
         return None
+
+
+def _normalize_vision_result(result: dict) -> dict:
+    result.setdefault("is_breadboard_image", True)
+    result.setdefault("inappropriate_reason", None)
+    result.setdefault("detected_components", [])
+    result.setdefault("wiring_observations", [])
+    result.setdefault("faults", [])
+    result.setdefault("series_parallel_errors", [])
+    result.setdefault("short_circuit_risks", [])
+    result.setdefault("overall_match_score", 0.5)
+    result.setdefault("summary", "Analysis complete.")
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -261,7 +258,8 @@ def _parse_gemini_json(raw_text: str) -> Optional[dict]:
 
 def run_groq_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[dict]) -> Optional[dict]:
     """Fallback to Groq vision model. Returns None on failure."""
-    if not GROQ_API_KEY:
+    active_key = os.getenv("GROQ_API_KEY") or GROQ_API_KEY
+    if not active_key:
         return None
     try:
         import requests
@@ -273,7 +271,7 @@ def run_groq_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[di
         mime_type = mime_map.get(ext, "image/jpeg")
         prompt    = _build_gemini_prompt(exp_data, exp_id)
         payload = {
-            "model": "meta-llama/llama-4-scout-17b-16e-instruct",
+            "model": "llama-3.2-11b-vision-preview",
             "messages": [{"role": "user", "content": [
                 {"type": "text", "text": prompt},
                 {"type": "image_url", "image_url": {"url": f"data:{mime_type};base64,{b64_image}"}}
@@ -281,18 +279,20 @@ def run_groq_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[di
             "max_tokens": 2048,
             "temperature": 0.1
         }
-        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+        headers = {"Authorization": f"Bearer {active_key}", "Content-Type": "application/json"}
         r = requests.post("https://api.groq.com/openai/v1/chat/completions",
-                          json=payload, headers=headers, timeout=45)
-        r.raise_for_status()
-        raw    = r.json()["choices"][0]["message"]["content"].strip()
-        result = _parse_gemini_json(raw)
-        if result:
-            result["_source"] = "groq_vision"
-        return result
+                          data=json.dumps(payload, ensure_ascii=True), headers=headers, timeout=45)
+        if r.status_code == 200:
+            raw    = r.json()["choices"][0]["message"]["content"].strip()
+            result = _parse_gemini_json(raw)
+            if result:
+                result["_source"] = "groq_vision"
+            return result
+        else:
+            print(f"Groq Vision returned status {r.status_code}: {r.text}")
     except Exception as e:
         print(f"Groq Vision fallback failed: {e}")
-        return None
+    return None
 
 
 # ---------------------------------------------------------------------------
