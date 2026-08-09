@@ -1,0 +1,104 @@
+[
+  {
+    "id": "sem3_EC24202_exp1_ce_npn",
+    "semester": 3,
+    "lab_code": "EC24202",
+    "lab_name": "Electronic Devices Lab",
+    "exp_number": 2,
+    "title": "CE characteristics of NPN transistor",
+    "type": "hardware",
+    "aim": "To plot the input and output static characteristics of an NPN transistor in Common Emitter configuration.",
+    "theory": {
+      "summary": "In Common Emitter (CE) configuration, the emitter terminal is common to both input (base-emitter) and output (collector-emitter) loops. Input characteristics represent IB vs VBE for constant VCE, demonstrating diode-like forward bias. Output characteristics show IC vs VCE for constant IB, defining active, saturation, and cutoff regions.",
+      "key_formulas": [
+        { "name": "Input Dynamic Resistance", "formula": "r_in = ΔV_BE / ΔI_B | constant V_CE", "variables": "r_in in ohms, IB in microamperes" },
+        { "name": "Output Dynamic Resistance", "formula": "r_out = ΔV_CE / ΔI_C | constant I_B", "variables": "r_out in ohms, IC in milliamperes" }
+      ],
+      "key_concepts": ["Common Emitter", "Input Characteristics", "Output Characteristics", "Active Region", "Saturation Region"]
+    },
+    "components": [
+      { "name": "NPN Transistor BC547", "spec": "TO-92 package", "quantity": 1 },
+      { "name": "Resistor 10kΩ", "spec": "0.25W", "quantity": 1 },
+      { "name": "Resistor 1kΩ", "spec": "0.25W", "quantity": 1 },
+      { "name": "Variable DC supplies", "spec": "0-15V", "quantity": 2 }
+    ],
+    "procedure": [
+      "Step 1: Connect the NPN base resistor to the VBB supply and the collector resistor to VCC.",
+      "Step 2: Keeping VCE constant at 0V, vary VBE and record base current IB.",
+      "Step 3: Repeat input readings for VCE constant at 1V and 5V.",
+      "Step 4: Keep base current IB constant at 20μA. Vary VCE from 0V to 10V and record IC.",
+      "Step 5: Repeat output readings for IB constant at 40μA and 60μA."
+    ],
+    "observations": {
+      "table_headers": ["IB (uA)", "VBE (V)", "VCE (V)", "IC (mA)"],
+      "sample_row": ["20", "0.7", "5.0", "3.0"],
+      "what_to_plot": "Input characteristics (VBE vs IB) and Output characteristics (VCE vs IC)"
+    },
+    "expected_results": {
+      "description": "Output current IC should increase rapidly below VCE = 0.7V (saturation), then saturate to a constant level proportional to IB (active region).",
+      "typical_values": [
+        { "parameter": "Beta current gain", "expected": "~150-200", "unit": "" },
+        { "parameter": "Cut-in VBE", "expected": "0.65", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Base current is zero while VBE increases",
+        "causes": ["Base resistor is open", "Transistor pins are swapped"],
+        "fix": "Verify BC547 Pinout: Collector, Base, Emitter from flat face left-to-right. Check base connections."
+      }
+    ],
+    "viva_questions": [
+      { "q": "Why is the CE configuration widely used in amplifiers?", "a": "Because it offers high voltage and current gain, providing the maximum power gain among all configurations." }
+    ]
+  },
+  {
+    "id": "sem3_EC24202_exp2_nmos_enh",
+    "semester": 3,
+    "lab_code": "EC24202",
+    "lab_name": "Electronic Devices Lab",
+    "exp_number": 3,
+    "title": "Enhancement-mode nMOSFET characteristics",
+    "type": "hardware",
+    "aim": "To plot the drain and transfer characteristics of an n-channel Enhancement MOSFET.",
+    "theory": {
+      "summary": "An enhancement MOSFET remains off at VGS = 0V. An n-channel is formed when VGS exceeds the threshold voltage Vth, attracting electrons under the gate oxide. Drain current ID flows when VDS is applied, saturating when VDS > VGS - Vth.",
+      "key_formulas": [
+        { "name": "Saturation Current", "formula": "ID = 0.5 * kn * (VGS - Vth)^2", "variables": "kn = conduction parameter, Vth = threshold voltage" }
+      ],
+      "key_concepts": ["MOSFET threshold", "Drain characteristics", "Transfer characteristics", "Pinch-off"]
+    },
+    "components": [
+      { "name": "NMOS Transistor IRF540N", "spec": "TO-220 package", "quantity": 1 },
+      { "name": "Variable DC Supply", "spec": "0-15V", "quantity": 2 },
+      { "name": "Resistor 100Ω", "spec": "1W", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Connect gate to VGG supply and drain to VDD supply through the load resistor.",
+      "Step 2: Maintain VDS constant at 5V, vary VGS from 0V to 5V and record ID (transfer curve).",
+      "Step 3: Set VGS constant at 3V. Vary VDS from 0V to 10V and record ID (drain curve).",
+      "Step 4: Repeat drain curve for VGS = 4V."
+    ],
+    "observations": {
+      "table_headers": ["VGS (V)", "VDS (V)", "ID (mA)"],
+      "sample_row": ["4.0", "5.0", "120.0"],
+      "what_to_plot": "Drain (VDS vs ID) and Transfer (VGS vs ID) curves"
+    },
+    "expected_results": {
+      "description": "Drain current should remain zero until VGS reaches Vth (~2-4V for IRF540N), then increase quadratically.",
+      "typical_values": [
+        { "parameter": "Threshold Vth", "expected": "3.0", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Drain current does not flow at high gate voltage",
+        "causes": ["Gate oxide is punctured by ESD", "Drain-source pins are swapped"],
+        "fix": "Always ground your hands before handling MOSFET pins to avoid ESD damage. Verify IRF540 Pinout: Gate, Drain, Source from front left-to-right."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What does enhancement-mode mean?", "a": "It means the channel is absent at zero gate voltage and must be enhanced or created by applying a gate potential." }
+    ]
+  }
+]

@@ -1,0 +1,625 @@
+[
+  {
+    "id": "sem1_EC24102_exp1_cro_measurements",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 1,
+    "title": "Measurement of voltage, time period and frequency using CRO",
+    "type": "hardware",
+    "aim": "To measure peak voltage, time period, and frequency of a given AC signal using a Cathode Ray Oscilloscope (CRO).",
+    "theory": {
+      "summary": "A CRO displays voltage as a function of time on its screen. The vertical axis (Y) represents voltage and the horizontal axis (X) represents time. The screen is divided into divisions, and the values of each division are set by the VOLTS/DIV and TIME/DIV knobs. Peak voltage is measured by counting vertical divisions of the waveform. Time period is measured by counting horizontal divisions for one complete cycle. Frequency is the reciprocal of the time period.",
+      "key_formulas": [
+        { "name": "Peak Voltage", "formula": "Vp = (number of vertical divisions) × (VOLTS/DIV setting)", "variables": "Vp = peak voltage in volts" },
+        { "name": "Time Period", "formula": "T = (number of horizontal divisions per cycle) × (TIME/DIV setting)", "variables": "T = time period in seconds" },
+        { "name": "Frequency", "formula": "f = 1 / T", "variables": "f = frequency in Hz, T = time period in seconds" }
+      ],
+      "key_concepts": ["CRO calibration", "VOLTS/DIV", "TIME/DIV", "peak vs RMS voltage", "trigger"]
+    },
+    "components": [
+      { "name": "CRO (Cathode Ray Oscilloscope)", "spec": "Dual trace preferred", "quantity": 1 },
+      { "name": "Function generator / signal source", "spec": "variable frequency", "quantity": 1 },
+      { "name": "BNC to probe cable", "spec": "10x probe", "quantity": 1 },
+      { "name": "Connecting wires", "spec": "", "quantity": 5 }
+    ],
+    "procedure": [
+      "Step 1: Switch on the CRO and allow 2 minutes warm-up. Set the trigger to AUTO.",
+      "Step 2: Connect the probe to CH1 input. Attach probe tip to the signal source output and clip ground to signal ground.",
+      "Step 3: Adjust VOLTS/DIV so the waveform occupies 4–6 divisions vertically. Note the VOLTS/DIV value.",
+      "Step 4: Adjust TIME/DIV so 1–2 complete cycles are visible. Note the TIME/DIV value.",
+      "Step 5: Count the number of vertical divisions from peak to trough (peak-to-peak). Divide by 2 for peak amplitude.",
+      "Step 6: Calculate Vp = (divisions) × (VOLTS/DIV).",
+      "Step 7: Count horizontal divisions for exactly one complete cycle.",
+      "Step 8: Calculate T = (divisions) × (TIME/DIV), then f = 1/T.",
+      "Step 9: Repeat for at least 3 different frequencies from the function generator and record all values."
+    ],
+    "observations": {
+      "table_headers": ["Signal No.", "VOLTS/DIV (V)", "Vertical divisions", "Vp (V)", "TIME/DIV (ms)", "Horizontal divisions", "T (ms)", "f (Hz)"],
+      "sample_row": ["1", "1", "4", "4", "1", "5", "5", "200"],
+      "what_to_plot": "No graph required; tabulate measured vs function generator set frequency"
+    },
+    "expected_results": {
+      "description": "Measured frequency should match function generator display within 5%. Measured voltage should match multimeter RMS × 1.414 within 10%.",
+      "typical_values": [
+        { "parameter": "Measurement accuracy", "expected": "within ±5%", "unit": "%" },
+        { "parameter": "Vp for 1 Vrms sine", "expected": "~1.414", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Waveform is unstable or scrolling",
+        "causes": ["Trigger level not set correctly", "Trigger source set to wrong channel"],
+        "fix": "Rotate TRIGGER LEVEL knob until waveform locks. Ensure trigger source matches your input channel."
+      },
+      {
+        "symptom": "Waveform is too small to measure accurately",
+        "causes": ["VOLTS/DIV set too high"],
+        "fix": "Reduce VOLTS/DIV so waveform fills at least 4 vertical divisions."
+      },
+      {
+        "symptom": "Flat line on screen",
+        "causes": ["Probe ground not connected", "Signal source not ON", "CH1/CH2 selection wrong"],
+        "fix": "Check probe ground clip, verify signal source output, press CH1 button on CRO."
+      },
+      {
+        "symptom": "Frequency reading is off by factor of 10",
+        "causes": ["Probe set to 10x but CRO not compensated", "TIME/DIV miscounted"],
+        "fix": "Check probe switch position. Recount horizontal divisions carefully for exactly one full cycle."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "If student shows a waveform photo — check whether the baseline (zero line) is centered before measuring divisions.",
+      "A clipped waveform top/bottom means VOLTS/DIV is too low — ask student to increase it.",
+      "If measuring peak-to-peak, remember to divide by 2 for peak only."
+    ],
+    "viva_questions": [
+      { "q": "What is the difference between peak voltage and RMS voltage?", "a": "Peak voltage is the maximum amplitude. RMS = Vp / √2 ≈ 0.707 × Vp for a sine wave. RMS is the effective heating value." },
+      { "q": "Why do we use a 10x probe?", "a": "A 10x probe has 9 MΩ series resistance that, combined with CRO's 1 MΩ input, creates a 10:1 voltage divider. It reduces loading on the circuit and extends bandwidth." },
+      { "q": "What does the trigger do?", "a": "It synchronises the timebase sweep with the input signal so the waveform appears stationary on screen." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp2_lissajous",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 2,
+    "title": "Measurement of frequency and phase difference using Lissajous patterns",
+    "type": "hardware",
+    "aim": "To determine unknown frequency and phase difference between two sinusoidal signals using Lissajous figures on a CRO.",
+    "theory": {
+      "summary": "When two sinusoidal signals are applied to the X and Y inputs of a CRO simultaneously (X-Y mode), the resulting pattern is called a Lissajous figure. The shape depends on the frequency ratio and phase difference between the signals. For frequency measurement, the ratio fy/fx equals the ratio of X-axis tangency points to Y-axis tangency points. For phase difference, when both signals have equal frequency, the pattern is an ellipse and sin(φ) = (Y-intercept) / (Y-maximum).",
+      "key_formulas": [
+        { "name": "Frequency ratio", "formula": "fy / fx = Nx / Ny", "variables": "Nx = tangency points on X-axis, Ny = tangency points on Y-axis" },
+        { "name": "Phase difference", "formula": "sin(φ) = Y0 / Ymax", "variables": "Y0 = Y-intercept of ellipse, Ymax = maximum Y amplitude" }
+      ],
+      "key_concepts": ["X-Y mode", "Lissajous figure", "phase difference", "frequency ratio", "ellipse"]
+    },
+    "components": [
+      { "name": "CRO", "spec": "Dual trace with X-Y mode", "quantity": 1 },
+      { "name": "Function generator", "spec": "Two independent outputs or one with phase shift", "quantity": 2 },
+      { "name": "Connecting wires / BNC cables", "spec": "", "quantity": 4 }
+    ],
+    "procedure": [
+      "Step 1: Set CRO to X-Y mode (disable timebase, connect CH1 to X and CH2 to Y).",
+      "Step 2: Apply known reference frequency fx to CH1 (X-axis).",
+      "Step 3: Apply unknown frequency fy to CH2 (Y-axis).",
+      "Step 4: Observe the Lissajous figure. Count tangency points touching a horizontal line (Nx) and a vertical line (Ny).",
+      "Step 5: Calculate fy = fx × (Nx / Ny).",
+      "Step 6: For phase measurement, set both generators to same frequency.",
+      "Step 7: Observe the ellipse formed. Measure Y-intercept (Y0) where ellipse crosses Y-axis and maximum Y extent (Ymax).",
+      "Step 8: Calculate phase angle φ = sin⁻¹(Y0 / Ymax).",
+      "Step 9: Repeat for at least 3 frequency ratios (1:1, 1:2, 2:3) and 3 phase differences (0°, 45°, 90°)."
+    ],
+    "observations": {
+      "table_headers": ["fx (Hz)", "Nx", "Ny", "Calculated fy (Hz)", "Actual fy (Hz)", "Y0 (div)", "Ymax (div)", "Phase φ (°)"],
+      "sample_row": ["1000", "2", "1", "2000", "2000", "2", "4", "30"],
+      "what_to_plot": "Sketch Lissajous patterns observed for each frequency ratio"
+    },
+    "expected_results": {
+      "description": "For 1:1 frequency and 0° phase, pattern is a straight diagonal line. For 90° phase, pattern is a circle. For other phases, an ellipse. Frequency ratio patterns show loops equal to tangency counts.",
+      "typical_values": [
+        { "parameter": "Phase accuracy", "expected": "±5°", "unit": "degrees" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Pattern is a moving or rotating figure instead of stable",
+        "causes": ["Two generators not phase-locked", "Frequencies not exactly at integer ratio"],
+        "fix": "Fine-tune one generator frequency very slowly until pattern stabilizes. Exact integer ratios are needed."
+      },
+      {
+        "symptom": "Getting a straight line instead of ellipse for phase measurement",
+        "causes": ["Phase difference is exactly 0° or 180°"],
+        "fix": "This is a correct result — a straight line means signals are in phase or exactly anti-phase."
+      },
+      {
+        "symptom": "Cannot count tangency points — figure is too complex",
+        "causes": ["Non-integer frequency ratio chosen"],
+        "fix": "Use simple integer ratios: 1:1, 1:2, 1:3, 2:3. Fractional ratios produce unstable rotating patterns."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "If student uploads photo of rotating figure — tell them to slightly adjust one frequency for integer ratio.",
+      "A perfect circle means 90° phase difference AND equal amplitudes — both conditions required.",
+      "Count tangency points on the outermost boundary of the figure only, not internal loops."
+    ],
+    "viva_questions": [
+      { "q": "What shape is the Lissajous figure for equal frequencies and 90° phase difference?", "a": "A perfect circle (if amplitudes are equal) or an ellipse with major axis along horizontal/vertical." },
+      { "q": "How many loops appear for a 2:3 frequency ratio?", "a": "Nx=3 horizontal tangencies, Ny=2 vertical tangencies. The figure has 2 horizontal loops." },
+      { "q": "Why does a straight diagonal line appear for 0° phase?", "a": "Both signals rise and fall together so the Y vs X plot traces a straight line y = mx." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp3_pn_junction",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 3,
+    "title": "PN Junction Diode characteristics",
+    "type": "hardware",
+    "aim": "To plot forward and reverse bias V-I characteristics of a PN junction diode and determine cut-in voltage, dynamic resistance, and reverse saturation current.",
+    "theory": {
+      "summary": "A PN junction diode conducts heavily in forward bias once voltage exceeds the cut-in voltage (~0.6–0.7V for silicon). In reverse bias it allows only a tiny leakage current (reverse saturation current I0) until breakdown. The ideal diode equation is I = I0(e^(V/nVT) - 1) where VT = kT/q ≈ 26mV at room temperature and n is ideality factor (1–2). The forward V-I curve rises exponentially while the reverse curve is nearly flat until breakdown.",
+      "key_formulas": [
+        { "name": "Diode equation", "formula": "I = I0 (e^(V/nVT) - 1)", "variables": "I0=saturation current, n=ideality factor, VT=thermal voltage=26mV at 25°C" },
+        { "name": "Dynamic resistance", "formula": "rd = ΔV / ΔI", "variables": "Measured from slope of forward V-I curve in conducting region" }
+      ],
+      "key_concepts": ["cut-in voltage", "forward bias", "reverse bias", "breakdown", "saturation current", "dynamic resistance"]
+    },
+    "components": [
+      { "name": "PN junction diode", "spec": "1N4007 or IN4001", "quantity": 1 },
+      { "name": "Variable DC power supply", "spec": "0–15V", "quantity": 1 },
+      { "name": "Voltmeter (digital)", "spec": "0–10V range", "quantity": 1 },
+      { "name": "Milliammeter / microammeter", "spec": "0–200mA forward, 0–200μA reverse", "quantity": 1 },
+      { "name": "Resistor (current limiting)", "spec": "1kΩ, 0.5W", "quantity": 1 },
+      { "name": "Breadboard and wires", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Connect the circuit — supply → current-limiting resistor → diode (anode to +) → back to supply ground. Place voltmeter across the diode. Place ammeter in series.",
+      "Step 2: FORWARD BIAS — Start from 0V. Increase supply voltage in steps of 0.05V initially near cut-in, then 0.1V steps beyond. Record diode voltage (Vd) and current (Id) at each step up to ~20mA max.",
+      "Step 3: Reverse the diode polarity in circuit for REVERSE BIAS measurement.",
+      "Step 4: Apply reverse voltage from 0 to max rated reverse voltage (do not exceed PIV) in steps of 1V. Record reverse current (in μA).",
+      "Step 5: Plot forward characteristics: Vd on X-axis, Id on Y-axis. Plot reverse on same graph with appropriate scale.",
+      "Step 6: From the graph, determine cut-in voltage (where current starts rising sharply), dynamic resistance (1/slope in linear region), and reverse saturation current."
+    ],
+    "observations": {
+      "table_headers": ["Vd (V)", "Id (mA) — Forward", "Vr (V)", "Ir (μA) — Reverse"],
+      "sample_row": ["0.6", "1.2", "5", "0.5"],
+      "what_to_plot": "V on X-axis vs I on Y-axis; forward and reverse on same graph with broken Y-axis"
+    },
+    "expected_results": {
+      "description": "Silicon diode should show cut-in voltage between 0.6–0.7V. Reverse current should be in the range of 0.1–1 μA. Dynamic resistance in conducting region is typically 5–25Ω.",
+      "typical_values": [
+        { "parameter": "Cut-in voltage (Si)", "expected": "0.6–0.7", "unit": "V" },
+        { "parameter": "Reverse saturation current", "expected": "0.1–1", "unit": "μA" },
+        { "parameter": "Dynamic resistance", "expected": "5–25", "unit": "Ω" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Diode gets hot and current jumps suddenly",
+        "causes": ["Current limiting resistor missing or too low value", "Supply voltage increased too fast"],
+        "fix": "Always use at least 1kΩ series resistor in forward bias. Increase voltage slowly in small steps."
+      },
+      {
+        "symptom": "No current in forward bias even at 1V",
+        "causes": ["Diode connected in reverse", "Diode is burnt", "Circuit connection open"],
+        "fix": "Check diode orientation — silver band is cathode. Test diode continuity with multimeter in diode mode."
+      },
+      {
+        "symptom": "Cut-in voltage appears at 0.3V instead of 0.6V",
+        "causes": ["Germanium diode used instead of silicon", "Voltmeter measuring supply voltage not diode voltage"],
+        "fix": "Ensure voltmeter probes are directly across the diode terminals, not the full circuit."
+      },
+      {
+        "symptom": "Reverse current is very high (mA range) immediately",
+        "causes": ["Diode is damaged/shorted", "Measuring forward current with reversed supply"],
+        "fix": "Replace diode. Verify polarity of supply for reverse bias experiment."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "In a correct circuit photo, the resistor must be in series and voltmeter must be directly across the diode.",
+      "Check if the student has placed ammeter in parallel instead of series — this is the most common wiring mistake.",
+      "If diode symbol on breadboard is oriented with band (cathode) toward positive supply, it's in reverse bias — ask student to confirm which test they are doing."
+    ],
+    "viva_questions": [
+      { "q": "Why does silicon have a higher cut-in voltage than germanium?", "a": "Silicon has a wider bandgap (1.12 eV vs 0.67 eV for Ge), so more energy is needed to overcome the barrier." },
+      { "q": "What is dynamic resistance and why does it change with operating point?", "a": "rd = dV/dI, the slope of V-I curve. It decreases as current increases because the exponential curve gets steeper." },
+      { "q": "What is the effect of temperature on reverse saturation current?", "a": "I0 approximately doubles for every 10°C rise in temperature, because more electron-hole pairs are thermally generated." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp4_zener",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 4,
+    "title": "Zener Diode characteristics and Voltage Regulator",
+    "type": "hardware",
+    "aim": "To plot V-I characteristics of a Zener diode and design a Zener voltage regulator circuit.",
+    "theory": {
+      "summary": "A Zener diode is designed to operate in reverse breakdown region. Below the Zener voltage (Vz), it behaves like a normal reverse-biased diode with tiny leakage. At Vz, the voltage clamps and remains nearly constant over a wide range of currents — this is used for voltage regulation. Breakdown occurs via Zener effect (heavy doping, thin depletion layer, <5V) or avalanche effect (>5V). The dynamic impedance Zz = ΔVz/ΔIz is very small in the breakdown region, typically 5–50Ω.",
+      "key_formulas": [
+        { "name": "Zener regulator output", "formula": "Vout = Vz (clamped)", "variables": "Vout stays at Vz provided Iz stays between Iz_min and Iz_max" },
+        { "name": "Series resistor", "formula": "Rs = (Vin - Vz) / (Iz + IL)", "variables": "IL = load current, Iz = Zener current (keep above Iz_min)" },
+        { "name": "Zener dynamic impedance", "formula": "Zz = ΔVz / ΔIz", "variables": "From slope of reverse breakdown region" }
+      ],
+      "key_concepts": ["Zener breakdown", "avalanche breakdown", "voltage regulation", "dynamic impedance", "line regulation", "load regulation"]
+    },
+    "components": [
+      { "name": "Zener diode", "spec": "5.1V or 6.2V, 1W (e.g. 1N4733 or 1N751)", "quantity": 1 },
+      { "name": "Variable DC supply", "spec": "0–15V", "quantity": 1 },
+      { "name": "Series resistor Rs", "spec": "470Ω or 1kΩ, 1W", "quantity": 1 },
+      { "name": "Load resistor RL", "spec": "1kΩ (variable or fixed)", "quantity": 1 },
+      { "name": "Voltmeter", "spec": "0–15V", "quantity": 1 },
+      { "name": "Milliammeter", "spec": "0–100mA", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: V-I CHARACTERISTICS — Connect Zener in reverse bias with series resistor. Increase voltage in 1V steps from 0 to (Vz + 3V). Record Vz and Iz at each step.",
+      "Step 2: Note the knee point where current starts increasing sharply — this is Vz.",
+      "Step 3: REGULATOR CIRCUIT — Set Vin to Vz + 3V. Connect load RL across the Zener.",
+      "Step 4: LINE REGULATION — Vary Vin from (Vz-1) to (Vz+5)V in 0.5V steps. Record Vout each time. Vout should remain at Vz.",
+      "Step 5: LOAD REGULATION — Fix Vin at Vz+3V. Vary RL from 10kΩ down to 500Ω. Record Vout and IL at each step.",
+      "Step 6: Plot reverse V-I characteristics. Plot Vout vs Vin (line regulation) and Vout vs IL (load regulation)."
+    ],
+    "observations": {
+      "table_headers": ["Vz (V)", "Iz (mA)", "Vin for regulation (V)", "Vout (V)", "IL (mA)", "Vout at load variation (V)"],
+      "sample_row": ["5.1", "10", "8", "5.1", "5", "5.09"],
+      "what_to_plot": "Reverse V-I curve showing breakdown knee; Vout vs Vin flat region; Vout vs IL flat region"
+    },
+    "expected_results": {
+      "description": "For a 5.1V Zener, output should hold at 5.1V ±0.2V over the regulation range. Dynamic impedance should be 5–50Ω in breakdown region.",
+      "typical_values": [
+        { "parameter": "Zener voltage (1N4733)", "expected": "5.1", "unit": "V" },
+        { "parameter": "Regulation range Iz", "expected": "1–60", "unit": "mA" },
+        { "parameter": "Dynamic impedance", "expected": "7–50", "unit": "Ω" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "No breakdown — voltage keeps rising",
+        "causes": ["Zener connected in forward bias", "Rs too large limiting current below Iz_min"],
+        "fix": "Reverse Zener polarity. Reduce Rs. Ensure supply can reach Vz."
+      },
+      {
+        "symptom": "Output voltage droops under load",
+        "causes": ["RL too small pulling more current than Zener can supply", "Rs value too large"],
+        "fix": "Increase RL or reduce Rs to ensure adequate Iz even at full load current."
+      },
+      {
+        "symptom": "Zener gets very hot",
+        "causes": ["Power dissipation exceeds rating", "Iz too high"],
+        "fix": "Check Pz = Vz × Iz does not exceed rated wattage. Increase Rs."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "Zener in regulator circuit must be connected with cathode toward the positive rail (reverse biased).",
+      "Series resistor must be between supply and the Zener/load junction — not after the load.",
+      "If student sees Vout = Vin (unregulated), the Zener is not in breakdown — check Vin is above Vz."
+    ],
+    "viva_questions": [
+      { "q": "What is the difference between Zener effect and avalanche effect?", "a": "Zener effect occurs in heavily doped diodes at <5V via quantum tunneling through thin depletion region. Avalanche effect occurs at >5V via impact ionization chain multiplication." },
+      { "q": "Why is a series resistor essential in a Zener regulator?", "a": "Without Rs, excess current would destroy the Zener. Rs drops the difference between Vin and Vz and limits current." },
+      { "q": "What is line regulation?", "a": "Ability of regulator to maintain constant Vout despite variations in Vin. Good regulation means Vout barely changes even when Vin varies significantly." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp5_bjt_characteristics",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 5,
+    "title": "BJT characteristics",
+    "type": "hardware",
+    "aim": "To plot input (IB vs VBE) and output (IC vs VCE) characteristics of an NPN BJT in common emitter configuration and determine current gain (β) and Early voltage.",
+    "theory": {
+      "summary": "A BJT in common emitter has base current IB as input and collector current IC as output. Input characteristics plot IB vs VBE for constant VCE — they resemble a diode curve. Output characteristics plot IC vs VCE for different fixed values of IB. In the active region, IC = β × IB where β (hFE) is the DC current gain, typically 50–300 for small signal transistors. The flat region of output characteristics shows that IC is nearly independent of VCE — this is the active region used for amplification. Slight slope in this region is due to Early effect.",
+      "key_formulas": [
+        { "name": "DC current gain", "formula": "β = IC / IB", "variables": "Measured in active region at fixed VCE" },
+        { "name": "Transistor action", "formula": "IE = IC + IB", "variables": "IE = emitter current" }
+      ],
+      "key_concepts": ["active region", "saturation region", "cut-off region", "β (hFE)", "Early effect", "common emitter"]
+    },
+    "components": [
+      { "name": "NPN BJT", "spec": "BC547 or 2N2222", "quantity": 1 },
+      { "name": "DC power supply (VCE)", "spec": "0–15V", "quantity": 1 },
+      { "name": "DC power supply (VBE)", "spec": "0–3V", "quantity": 1 },
+      { "name": "Resistors", "spec": "100kΩ (base), 1kΩ (collector)", "quantity": 2 },
+      { "name": "Microammeter", "spec": "0–500μA for IB", "quantity": 1 },
+      { "name": "Milliammeter", "spec": "0–50mA for IC", "quantity": 1 },
+      { "name": "Voltmeter (×2)", "spec": "0–5V, 0–15V", "quantity": 2 }
+    ],
+    "procedure": [
+      "Step 1: INPUT CHARACTERISTICS — Set VCE = 5V (constant). Vary VBE from 0 to 0.8V in steps of 0.05V. Record IB at each step.",
+      "Step 2: Repeat Step 1 for VCE = 10V. Plot IB vs VBE for both VCE values.",
+      "Step 3: OUTPUT CHARACTERISTICS — Set IB = 20μA (constant using base resistor and VBB supply). Vary VCE from 0 to 15V in steps of 0.5V. Record IC.",
+      "Step 4: Repeat Step 3 for IB = 40μA, 60μA, 80μA, 100μA.",
+      "Step 5: Plot IC vs VCE family of curves for each IB value.",
+      "Step 6: Calculate β = IC / IB in the active region (VCE > 1V) from the graph."
+    ],
+    "observations": {
+      "table_headers": ["IB (μA)", "VCE (V)", "IC (mA)", "β = IC/IB"],
+      "sample_row": ["40", "5", "6", "150"],
+      "what_to_plot": "Family of IC vs VCE curves for IB = 20, 40, 60, 80, 100 μA"
+    },
+    "expected_results": {
+      "description": "For BC547: β typically 110–800. Active region curves should be nearly flat. VCE(sat) ≈ 0.2–0.3V. VBE(active) ≈ 0.6–0.7V.",
+      "typical_values": [
+        { "parameter": "β (hFE) for BC547", "expected": "110–800", "unit": "" },
+        { "parameter": "VBE in active region", "expected": "0.6–0.7", "unit": "V" },
+        { "parameter": "VCE(sat)", "expected": "0.2–0.3", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "IC does not increase with IB — stays near zero",
+        "causes": ["Transistor in cutoff", "VCE supply not connected", "BJT pin identification wrong"],
+        "fix": "Check BJT pinout (BC547: CBE from left to right flat side). Ensure VCE supply is ON and VBE > 0.6V."
+      },
+      {
+        "symptom": "IC is very high and transistor is hot",
+        "causes": ["No collector resistor", "IB set too high saturating transistor"],
+        "fix": "Always use at least 1kΩ collector resistor. Reduce IB to keep transistor in active region."
+      },
+      {
+        "symptom": "Output curves are not flat but steeply rising",
+        "causes": ["Transistor in saturation throughout", "IB too high for given VCE"],
+        "fix": "Reduce IB or increase VCE to push transistor into active region."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "BC547 pin order (flat side facing you, pins down): Collector-Base-Emitter from left to right.",
+      "2N2222 metal can: hold with tab up — Emitter-Base-Collector from left to right.",
+      "If student shows circuit photo, confirm emitter resistor is connected to ground, not to supply."
+    ],
+    "viva_questions": [
+      { "q": "Why is common emitter configuration most widely used?", "a": "It gives both current gain and voltage gain, and has moderate input/output impedance making it suitable for most amplifier stages." },
+      { "q": "What is the Early effect?", "a": "Slight increase in IC with VCE in active region because increasing VCE narrows the base width, reducing recombination and increasing effective β." },
+      { "q": "What happens if base is open circuit?", "a": "IB = 0, transistor goes to cutoff, IC ≈ ICEO (very small leakage current), transistor is OFF." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp6_transistor_amplifier",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 6,
+    "title": "Transistor Amplifier",
+    "type": "hardware",
+    "aim": "To design and test a single-stage CE BJT amplifier, measure voltage gain, input/output impedance, and observe phase inversion.",
+    "theory": {
+      "summary": "A common emitter amplifier uses voltage divider biasing to establish a stable Q-point in the active region. An AC input signal is superimposed on the DC bias. The transistor amplifies the signal and the output is taken across the collector resistor RC. The output is 180° phase-inverted relative to input because when Vin increases, IB and IC increase, causing larger voltage drop across RC and thus lower VCE (output). Voltage gain Av = -gm × RC where gm = IC/VT is transconductance.",
+      "key_formulas": [
+        { "name": "Voltage gain", "formula": "Av = -RC / re = -gm × RC", "variables": "re = VT/IC ≈ 26mV/IC, gm = IC/VT" },
+        { "name": "Q-point", "formula": "VB = Vcc × R2/(R1+R2), VE = VB - 0.7, IC ≈ IE = VE/RE", "variables": "Voltage divider biasing" },
+        { "name": "Input impedance", "formula": "Rin = R1 || R2 || (β × re)", "variables": "" }
+      ],
+      "key_concepts": ["Q-point", "voltage divider bias", "phase inversion", "voltage gain", "coupling capacitors", "bypass capacitor"]
+    },
+    "components": [
+      { "name": "NPN BJT", "spec": "BC547", "quantity": 1 },
+      { "name": "Resistors", "spec": "R1=33kΩ, R2=10kΩ, RC=3.3kΩ, RE=1kΩ", "quantity": 4 },
+      { "name": "Capacitors (coupling)", "spec": "10μF electrolytic ×2", "quantity": 2 },
+      { "name": "Capacitor (bypass)", "spec": "100μF electrolytic", "quantity": 1 },
+      { "name": "DC power supply", "spec": "12V", "quantity": 1 },
+      { "name": "Function generator", "spec": "sine wave 1kHz", "quantity": 1 },
+      { "name": "CRO (dual trace)", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Assemble voltage divider biased CE amplifier. Check all connections.",
+      "Step 2: Measure DC Q-point: VB, VE, VC using multimeter. Verify IC = (VE/RE) is in active region.",
+      "Step 3: Apply small sine wave (50mV peak, 1kHz) from function generator through input coupling cap.",
+      "Step 4: Observe input on CH1 and output on CH2 of CRO simultaneously.",
+      "Step 5: Confirm 180° phase inversion — output peak occurs when input is at trough.",
+      "Step 6: Measure Vin_peak and Vout_peak. Calculate Av = Vout/Vin.",
+      "Step 7: Gradually increase input amplitude until output clips. Note maximum undistorted output swing.",
+      "Step 8: Vary frequency from 10Hz to 1MHz. Measure gain at each frequency to observe frequency response."
+    ],
+    "observations": {
+      "table_headers": ["Frequency (Hz)", "Vin (mV)", "Vout (mV)", "Av = Vout/Vin", "Phase shift (°)"],
+      "sample_row": ["1000", "50", "400", "8", "180"],
+      "what_to_plot": "Av (dB) vs frequency (log scale) — the frequency response / Bode plot"
+    },
+    "expected_results": {
+      "description": "Mid-band gain ~10–20 for typical component values. Phase inversion of 180° in mid-band. Gain drops at low and high frequencies due to coupling capacitors and transistor capacitances.",
+      "typical_values": [
+        { "parameter": "Mid-band voltage gain", "expected": "10–20", "unit": "V/V" },
+        { "parameter": "Phase shift at 1kHz", "expected": "180", "unit": "°" },
+        { "parameter": "Lower -3dB frequency", "expected": "50–200", "unit": "Hz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Output is flat (no amplification)",
+        "causes": ["Coupling capacitor missing or wrong polarity", "Transistor in saturation or cutoff", "Bypass cap missing across RE"],
+        "fix": "Check capacitor polarity (+ve to higher voltage). Measure VCE — should be ~Vcc/2 for good bias. Check RE bypass cap."
+      },
+      {
+        "symptom": "Output is severely clipped on one side",
+        "causes": ["Q-point not centered", "Bias resistors wrong value"],
+        "fix": "Measure VCE. For symmetric clipping, VCE should be approximately Vcc/2. Adjust R1 or R2."
+      },
+      {
+        "symptom": "Large hum on output with no input signal",
+        "causes": ["Power supply ripple", "Bypass capacitor open"],
+        "fix": "Add 100μF decoupling cap across supply. Check RE bypass capacitor connection."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "Electrolytic caps have polarity — + terminal must face higher voltage node. Wrong polarity can cause shorts.",
+      "If output is DC-shifted on CRO, student may have forgotten AC coupling on CRO probe — press DC/AC button.",
+      "No output but correct DC bias usually means input coupling cap is open or wrongly oriented."
+    ],
+    "viva_questions": [
+      { "q": "Why does common emitter amplifier produce 180° phase shift?", "a": "Increasing Vin raises IB, raises IC, increases drop across RC, lowering VCE. So output goes down when input goes up — 180° inversion." },
+      { "q": "What is the purpose of the emitter bypass capacitor?", "a": "RE stabilizes the DC bias but also reduces AC gain. The bypass cap short-circuits RE for AC signals, restoring full AC gain without affecting DC stability." },
+      { "q": "What happens to gain at very low frequencies?", "a": "Coupling capacitors have high impedance at low frequencies, causing more signal to be dropped across them. This reduces gain below the lower cutoff frequency." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp7_opamp",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 7,
+    "title": "Inverting and Non-Inverting Op-Amp circuits",
+    "type": "hardware",
+    "aim": "To design and test inverting and non-inverting amplifier configurations using 741 op-amp and verify theoretical gain.",
+    "theory": {
+      "summary": "An op-amp (operational amplifier) has very high open-loop gain (~200,000). With negative feedback, precise closed-loop gain is set by external resistors. In inverting configuration, input is at inverting terminal (−) and output is 180° phase shifted. Gain Av = −Rf/R1. In non-inverting configuration, input at (+) terminal, output in phase with input, gain Av = 1 + Rf/R1. The virtual ground concept: with negative feedback, the − input is forced to same potential as + input by the feedback action.",
+      "key_formulas": [
+        { "name": "Inverting gain", "formula": "Av = -Rf / R1", "variables": "Rf = feedback resistor, R1 = input resistor" },
+        { "name": "Non-inverting gain", "formula": "Av = 1 + Rf / R1", "variables": "" },
+        { "name": "Virtual ground (inverting)", "formula": "V- ≈ V+ ≈ 0 (if V+ grounded)", "variables": "Approximation valid with high open-loop gain" }
+      ],
+      "key_concepts": ["virtual ground", "negative feedback", "closed-loop gain", "slew rate", "rail-to-rail", "unity gain buffer"]
+    },
+    "components": [
+      { "name": "Op-Amp IC", "spec": "μA741 or LM741, DIP-8", "quantity": 1 },
+      { "name": "Resistors", "spec": "R1=10kΩ, Rf=100kΩ (for gain of 10)", "quantity": 2 },
+      { "name": "Dual power supply", "spec": "±12V or ±15V", "quantity": 1 },
+      { "name": "Function generator", "spec": "sine wave, variable frequency", "quantity": 1 },
+      { "name": "CRO dual trace", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: INVERTING AMPLIFIER — Connect 741 with R1=10kΩ from input to pin 2 (−), Rf=100kΩ from pin 2 to output (pin 6). Connect pin 3 (+) to ground via 9.1kΩ. Apply ±12V supply to pins 7 and 4.",
+      "Step 2: Apply 0.5V peak sine at 1kHz. Observe input (CH1) and output (CH2) on CRO.",
+      "Step 3: Measure Vin and Vout peaks. Verify Av = −Rf/R1 = −10. Verify 180° phase shift.",
+      "Step 4: NON-INVERTING AMPLIFIER — Connect input to pin 3 (+). Move R1 from input to ground (between pin 2 and ground). Rf remains from pin 2 to pin 6.",
+      "Step 5: Apply same input. Measure gain = 1 + Rf/R1 = 11. Verify 0° phase shift.",
+      "Step 6: For both configurations, increase frequency until gain drops 3dB. Note gain-bandwidth product.",
+      "Step 7: Test with different Rf/R1 ratios to verify gain formula."
+    ],
+    "observations": {
+      "table_headers": ["Config", "R1 (kΩ)", "Rf (kΩ)", "Theoretical Av", "Vin (V)", "Vout (V)", "Measured Av", "Phase (°)"],
+      "sample_row": ["Inverting", "10", "100", "-10", "0.5", "5", "-10", "180"],
+      "what_to_plot": "Vin and Vout waveforms side by side; gain vs frequency plot"
+    },
+    "expected_results": {
+      "description": "Measured gain should match Rf/R1 ratio within ±5% in mid-band. 741 unity gain bandwidth is ~1 MHz. Output will clip at ±(Vcc − 2V) ≈ ±10V for ±12V supply.",
+      "typical_values": [
+        { "parameter": "Max output swing (±12V supply)", "expected": "±10", "unit": "V" },
+        { "parameter": "741 unity gain bandwidth", "expected": "~1", "unit": "MHz" },
+        { "parameter": "Input offset voltage (741)", "expected": "<6", "unit": "mV" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Output is a square wave instead of sine",
+        "causes": ["Input too large causing output to clip/saturate", "Op-amp supply voltage too low"],
+        "fix": "Reduce input signal amplitude. Verify ±12V or ±15V dual supply is connected to pins 7 and 4."
+      },
+      {
+        "symptom": "Output is zero or very small",
+        "causes": ["Supply pins 7 and 4 not connected", "Feedback resistor missing", "IC is damaged"],
+        "fix": "Check dual supply connections — most common mistake. Verify Rf is connected between output and inverting input."
+      },
+      {
+        "symptom": "Gain does not match formula",
+        "causes": ["Wrong resistor values", "Resistors have ±10% tolerance causing error"],
+        "fix": "Measure actual resistor values with multimeter before calculating. Use 1% tolerance resistors for accuracy."
+      },
+      {
+        "symptom": "Large DC offset at output with no input",
+        "causes": ["Bias current compensation resistor missing at + terminal"],
+        "fix": "Connect resistor R = R1||Rf between + terminal and ground to cancel bias current offset."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "741 DIP-8 pinout: pin 1=offset null, pin 2=inverting(−), pin 3=non-inverting(+), pin 4=V−, pin 5=offset null, pin 6=output, pin 7=V+, pin 8=NC.",
+      "Dual supply means both +12V AND −12V relative to ground are needed — not just a 24V single supply.",
+      "If student connects supply to wrong pins, IC may be damaged. Check pin 4 is negative supply and pin 7 is positive."
+    ],
+    "viva_questions": [
+      { "q": "What is virtual ground?", "a": "In an inverting amplifier with negative feedback, the inverting input (−) is forced to the same potential as the non-inverting input (+). If + is grounded, − is also at ~0V — a virtual ground. No current flows into the op-amp input." },
+      { "q": "What is gain-bandwidth product?", "a": "GBW = Av × f3dB = constant for an op-amp. If gain is 10, bandwidth is GBW/10. For 741, GBW = 1MHz." },
+      { "q": "Why can't op-amp output reach the supply rails?", "a": "Internal transistor stages need some voltage headroom to remain in active region. Typically output saturates 1–2V below each supply rail." }
+    ]
+  },
+  {
+    "id": "sem1_EC24102_exp8_logic_gates",
+    "semester": 1,
+    "lab_code": "EC24102",
+    "lab_name": "Basic Electronics Lab",
+    "exp_number": 8,
+    "title": "Logic Gates realization and Boolean expression implementation",
+    "type": "hardware",
+    "aim": "To verify truth tables of basic logic gates (AND, OR, NOT, NAND, NOR, XOR) using standard ICs and implement a given Boolean expression.",
+    "theory": {
+      "summary": "Digital logic gates are the building blocks of all digital circuits. Each gate implements a Boolean function on binary inputs. NAND and NOR are universal gates — any Boolean function can be implemented using only NAND gates or only NOR gates. Boolean algebra laws (De Morgan's theorem, absorption, etc.) allow simplification of expressions before hardware implementation. TTL ICs operate at 5V logic; inputs >2V are logic HIGH, <0.8V are logic LOW.",
+      "key_formulas": [
+        { "name": "De Morgan 1", "formula": "NOT(A AND B) = NOT(A) OR NOT(B)", "variables": "NAND realization of NOT and OR" },
+        { "name": "De Morgan 2", "formula": "NOT(A OR B) = NOT(A) AND NOT(B)", "variables": "NOR realization of NOT and AND" },
+        { "name": "XOR", "formula": "A ⊕ B = A'B + AB'", "variables": "XOR using NAND gates" }
+      ],
+      "key_concepts": ["truth table", "universal gates", "De Morgan theorem", "TTL logic levels", "fan-out", "propagation delay"]
+    },
+    "components": [
+      { "name": "IC 7408", "spec": "Quad 2-input AND gate", "quantity": 1 },
+      { "name": "IC 7432", "spec": "Quad 2-input OR gate", "quantity": 1 },
+      { "name": "IC 7404", "spec": "Hex Inverter (NOT gate)", "quantity": 1 },
+      { "name": "IC 7400", "spec": "Quad 2-input NAND gate", "quantity": 1 },
+      { "name": "IC 7402", "spec": "Quad 2-input NOR gate", "quantity": 1 },
+      { "name": "IC 7486", "spec": "Quad 2-input XOR gate", "quantity": 1 },
+      { "name": "5V DC supply (regulated)", "spec": "TTL compatible", "quantity": 1 },
+      { "name": "LED + 330Ω resistors", "spec": "for output indication", "quantity": 4 },
+      { "name": "Logic switches or jumper wires", "spec": "for input", "quantity": 4 }
+    ],
+    "procedure": [
+      "Step 1: Connect VCC (pin 14) to +5V and GND (pin 7) to ground for each IC.",
+      "Step 2: AND gate (7408) — Apply all 4 input combinations (00, 01, 10, 11). Record output LED state. Verify truth table.",
+      "Step 3: Repeat Step 2 for OR (7432), NOT (7404), NAND (7400), NOR (7402), XOR (7486).",
+      "Step 4: BOOLEAN EXPRESSION — Implement F = A'B + AB' (XOR) using only NAND gates from 7400.",
+      "Step 5: Derive NAND-only implementation: F = NAND(NAND(A,NAND(A,B)), NAND(B,NAND(A,B)))",
+      "Step 6: Connect and verify truth table of the implemented expression.",
+      "Step 7: Measure propagation delay using CRO (optional, measure tpLH and tpHL for one gate)."
+    ],
+    "observations": {
+      "table_headers": ["Gate", "A", "B", "Expected Output", "Measured Output (LED)"],
+      "sample_row": ["AND", "1", "1", "1", "ON"],
+      "what_to_plot": "Truth tables for each gate; gate diagram for Boolean expression implementation"
+    },
+    "expected_results": {
+      "description": "All truth tables should match standard logic. LED ON = logic 1 (HIGH, ~3.5V). LED OFF = logic 0 (LOW, ~0.2V). 7400 NAND propagation delay ≈ 7–15 ns.",
+      "typical_values": [
+        { "parameter": "TTL HIGH output voltage", "expected": "3.4–5", "unit": "V" },
+        { "parameter": "TTL LOW output voltage", "expected": "0–0.4", "unit": "V" },
+        { "parameter": "Supply voltage", "expected": "5 ± 0.25", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "All outputs are HIGH regardless of input",
+        "causes": ["Floating inputs interpreted as HIGH in TTL", "VCC or GND not connected to IC"],
+        "fix": "Connect unused inputs to defined logic levels (GND for 0, VCC for 1). Never leave TTL inputs floating."
+      },
+      {
+        "symptom": "IC is very hot",
+        "causes": ["Supply connected to wrong pins (reversed)", "Short circuit on output"],
+        "fix": "Check IC orientation. Pin 1 has notch/dot marking. VCC is always top-right (pin 14) for standard 14-pin DIP ICs."
+      },
+      {
+        "symptom": "Output LED always ON (never changes)",
+        "causes": ["LED wired to VCC instead of output pin", "Output stuck HIGH due to fault"],
+        "fix": "Verify LED anode is on output pin, cathode through 330Ω to GND. Check IC is not damaged."
+      },
+      {
+        "symptom": "NOR/NAND result seems wrong",
+        "causes": ["Student confusing pin numbers — 7402 NOR has output on pin 1, inputs on pins 2 and 3 (opposite of most gates)"],
+        "fix": "Always check datasheet pinout. 7402 NOR gate pins are in reversed order compared to 7400."
+      }
+    ],
+    "circuit_diagnosis_hints": [
+      "7402 NOR gate is a common trap — pin order is Y-A-B (output first) unlike other gates.",
+      "If implementing multi-gate expression, confirm ICs share the same GND. Separate grounds cause unpredictable behavior.",
+      "IC orientation: notch or dot = pin 1 = top left. VCC = pin 14 (top right), GND = pin 7 (bottom right)."
+    ],
+    "viva_questions": [
+      { "q": "Why are NAND and NOR called universal gates?", "a": "Any Boolean function can be implemented using only NAND or only NOR gates. NOT, AND, OR can all be made from NAND alone, so any combinational circuit is realizable." },
+      { "q": "What is a floating input in TTL?", "a": "An unconnected TTL input. It floats to ~1.4V which TTL interprets as logic HIGH. This causes unpredictable behavior — inputs must always be tied to a defined level." },
+      { "q": "What is fan-out?", "a": "Maximum number of gate inputs that one gate output can drive reliably. Exceeding fan-out degrades logic levels and causes incorrect operation." }
+    ]
+  }
+]

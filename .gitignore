@@ -1,0 +1,27 @@
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Python cache and bytecode
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+# VS Code settings
+.vscode/
+
+# Static generated files
+static/downloads/
+static/error_maps/
+static/synthetic_dataset/
+
+# Auto-generated RAG FAISS index files
+data/faiss_index.bin
+data/index_meta.pkl
+data/experiments/generated_*.json

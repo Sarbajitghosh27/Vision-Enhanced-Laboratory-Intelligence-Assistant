@@ -1,0 +1,60 @@
+[
+  {
+    "id": "sem6_EC24356_exp1_led_interface",
+    "semester": 6,
+    "lab_code": "EC24356",
+    "lab_name": "Embedded Systems Lab",
+    "exp_number": 1,
+    "title": "LED Interfacing",
+    "type": "hardware",
+    "aim": "To interface LEDs with a microcontroller (8051/ARM) and write pin toggle loops.",
+    "theory": {
+      "summary": "General Purpose Input/Output (GPIO) pins are the primary interface between microcontrollers and the external world. To interface an LED, it must be connected in series with a current-limiting resistor to prevent excessive current. The LED can be connected in an active-high configuration (where setting the pin high turns the LED on) or active-low configuration (where clearing the pin to low sinks current and turns the LED on). In software, GPIO control registers (like DDRx/PORTx in AVR or MODER/ODR in STM32 ARM) are configured to set the pin as output, and software delays are used to control the toggle frequency.",
+      "key_formulas": [
+        { "name": "Current-limiting Resistor Rs", "formula": "Rs = (Vcc - Vled) / Iled", "variables": "Vcc = Supply voltage (e.g. 5V or 3.3V), Vled = LED forward voltage drop (~2.0V for Red), Iled = Desired current (~10mA to 20mA)" }
+      ],
+      "key_concepts": ["GPIO registers", "Current-limiting resistor", "Source vs Sink configuration", "Active-high/active-low", "Software delay loop"]
+    },
+    "components": [
+      { "name": "8051 or ARM STM32 Microcontroller Board", "spec": "with GPIO headers", "quantity": 1 },
+      { "name": "Light Emitting Diode (LED)", "spec": "Standard Red LED, 5mm", "quantity": 1 },
+      { "name": "Resistor 330Ω", "spec": "0.25W", "quantity": 1 },
+      { "name": "Breadboard and Jumper wires", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Connect the anode of the LED to microcontroller GPIO pin (e.g. P1.0 on 8051) through the 330Ω current-limiting resistor.",
+      "Step 2: Connect the cathode of the LED to the ground pin of the microcontroller board (active-high configuration).",
+      "Step 3: In the IDE (Keil or STM32CubeIDE), configure the target pin register as an Output.",
+      "Step 4: Write a loop that sets the GPIO pin high (logic 1), calls a software delay subroutine, sets the GPIO pin low (logic 0), calls the delay subroutine again, and loops back.",
+      "Step 5: Compile the program, flash the hex/binary file to the microcontroller board, and verify that the LED blinks."
+    ],
+    "observations": {
+      "table_headers": ["GPIO Output State", "Measured Pin Voltage (V)", "LED Status"],
+      "sample_row": ["Logic 1 (HIGH)", "4.8", "ON"],
+      "what_to_plot": "Verify output pin electrical levels and state timing diagram."
+    },
+    "expected_results": {
+      "description": "The LED should blink continuously with the configured toggle interval. Output pin voltage should swing between near 0V and Vcc.",
+      "typical_values": [
+        { "parameter": "GPIO High Output Voltage VOH", "expected": "5.0", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "LED is always OFF, but pin voltage toggles correctly",
+        "causes": ["LED is connected in reverse polarity (anode/cathode swapped)"],
+        "fix": "Verify LED orientation. The longer lead is the anode (positive) and the flat edge of the epoxy body is the cathode (negative)."
+      },
+      {
+        "symptom": "LED is very dim or burnt out",
+        "causes": ["Resistor value is too high (dim LED) or resistor was omitted (burnt LED)"],
+        "fix": "Always use a current-limiting resistor. Standard values are 220Ω to 470Ω for 5V systems."
+      }
+    ],
+    "viva_questions": [
+      { "q": "Why is a current-limiting resistor necessary for an LED?", "a": "LEDs are diodes with exponential I-V characteristics. Once turn-on voltage is reached, resistance drops to near zero, which would draw excessive current and burn out the LED or MCU pin without Rs." },
+      { "q": "What is the difference between sourcing and sinking current?", "a": "Sourcing means the microcontroller pin provides current to the load (pin is connected to anode, load goes to GND). Sinking means current flows into the microcontroller pin from the load (pin is connected to cathode, load goes to Vcc)." },
+      { "q": "What is GPIO pin debouncing?", "a": "It is a technique (software delay or hardware RC filter) used to filter out the mechanical contacts' noise generated when a push-button switch is toggled." }
+    ]
+  }
+]

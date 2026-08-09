@@ -1,0 +1,59 @@
+[
+  {
+    "id": "sem5_EC24306_exp1_rearranging_bytes",
+    "semester": 5,
+    "lab_code": "EC24306",
+    "lab_name": "Microprocessors Lab",
+    "exp_number": 1,
+    "title": "Rearranging Bytes",
+    "type": "software",
+    "aim": "To write an 8085/8086 assembly program to sort an array of bytes in ascending/descending order.",
+    "theory": {
+      "summary": "Sorting a block of data in memory is a fundamental assembly language task. Using the Intel 8085 instruction set, we can implement the Bubble Sort algorithm. In Bubble Sort, adjacent elements are compared and swapped if they are out of order. This process is repeated for N-1 passes, where N is the size of the array. Register pairs are used for memory pointer addressing (H-L registers in 8085), and loops are controlled via decrement-and-branch instructions (DCR/JNZ).",
+      "key_formulas": [
+        { "name": "Number of comparisons (worst case)", "formula": "Comparisons = N * (N - 1) / 2", "variables": "N = number of elements in the array" }
+      ],
+      "key_concepts": ["Assembly language", "Bubble sort", "Memory pointers", "8085 microprocessor", "Flags and conditionals"]
+    },
+    "components": [
+      { "name": "8085 Microprocessor Trainer Kit", "spec": "with hex keyboard or GNUSim8085 emulator", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Load the count of elements (N) into memory address 3000H. Load the array values starting from 3001H.",
+      "Step 2: Load the outer loop counter from 3000H into the C register, and decrement it by 1.",
+      "Step 3: Point the HL pair to the start of the array (3001H) and set up the inner loop counter in the D register.",
+      "Step 4: Fetch the first element into the Accumulator, increment the HL pointer, and compare with the memory element using the CMP M instruction.",
+      "Step 5: If the Accumulator value is smaller than or equal to the memory element, skip the swap (JNC). Otherwise, swap the two elements in memory.",
+      "Step 6: Decrement the inner counter (D) and repeat. Once the inner loop completes, decrement the outer counter (C) and repeat until sorted.",
+      "Step 7: Terminate the program with HLT or RST 1, and verify the sorted array in memory from 3001H."
+    ],
+    "observations": {
+      "table_headers": ["Memory Address", "Input Data (Hex)", "Expected Output (Hex)"],
+      "sample_row": ["3001H", "2F", "05"],
+      "what_to_plot": "Tabulate the input and sorted output array states from target memory locations."
+    },
+    "expected_results": {
+      "description": "The array should be correctly sorted in ascending order. For inputs [2F, 0E, 9B, 05, A0], the output should be [05, 0E, 2F, 9B, A0] starting from 3001H.",
+      "typical_values": [
+        { "parameter": "Outer Loop count (N-1)", "expected": "4", "unit": "" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Program executes forever and does not halt",
+        "causes": ["Loop counter registers not decremented before comparison (DCR C/DCR D missing)"],
+        "fix": "Ensure 'DCR C' and 'DCR D' instructions are correctly placed right before the loop JNZ conditions."
+      },
+      {
+        "symptom": "Array elements are duplicated or lost",
+        "causes": ["Incorrect register usage during swapping, overwriting elements before storing them"],
+        "fix": "Use intermediate registers (like B or E) to safely hold the value during memory swaps."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What does the CMP M instruction do in 8085?", "a": "It subtracts the contents of the memory location pointed to by HL from the Accumulator, updating Carry and Zero flags without altering the Accumulator." },
+      { "q": "How does the JNC instruction operate?", "a": "Jump on No Carry: it branches to the target address if the Carry flag is reset (0), which indicates the Accumulator was greater than or equal to the compared value." },
+      { "q": "Why is HL register pair preferred for array access in 8085?", "a": "Because the 'M' register designation implicitly references the memory address currently held in the HL pair, making memory indirect operations efficient." }
+    ]
+  }
+]

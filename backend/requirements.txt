@@ -1,0 +1,40 @@
+# ── VELIA Backend Requirements ────────────────────────────────────────────────
+# Production-ready dependencies for FastAPI + RAG + CV on Linux/Render.
+# Headless and lightweight packages only to guarantee fast, success-assured builds.
+
+# Core Web Server
+fastapi==0.136.0
+uvicorn==0.44.0
+python-multipart==0.0.26
+python-dotenv==1.2.2
+requests==2.33.1
+gunicorn==26.0.0
+
+# Scientific & Graph Processing
+numpy==2.4.4
+pandas==3.0.2
+scikit-learn==1.8.0
+networkx==3.6.1
+pydantic==2.13.1
+pydantic-settings==2.13.1
+
+# Computer Vision (Headless version to avoid libGL/X11 dependency errors on Render)
+pillow==12.2.0
+opencv-python-headless==4.13.0.92
+onnxruntime>=1.24.0
+
+# Generative AI Integrations
+google-genai>=0.1.1
+google-generativeai>=0.8.3
+groq>=0.18.0
+
+# ── Optional / Local-only Dependencies ────────────────────────────────────────
+# Excluded from Render build to prevent RAM OOM (512MB limit) and timeout errors.
+# The codebase automatically falls back to NumPy & keyword search if not present.
+# 
+# torch==2.12.0
+# torchvision==0.27.0
+# ultralytics==8.1.0
+# sentence-transformers==5.5.0
+# faiss-cpu==1.13.2
+# spacy==3.8.13

@@ -1,0 +1,138 @@
+[
+  {
+    "id": "sem5_EC24304_exp1_am_modulation",
+    "semester": 5,
+    "lab_code": "EC24304",
+    "lab_name": "Communication System Lab",
+    "exp_number": 1,
+    "title": "AM Modulation and Demodulation",
+    "type": "hardware",
+    "aim": "To generate an amplitude modulated wave, calculate the modulation index for different message amplitudes, and recover the message signal using a diode envelope detector.",
+    "theory": {
+      "summary": "Amplitude Modulation (AM) is a process in which the amplitude of a high frequency carrier signal is varied in linear proportion with the instantaneous amplitude of a low frequency message (modulating) signal. The mathematical expression of an AM wave is s(t) = Ac[1 + m * cos(2*pi*fm*t)] * cos(2*pi*fc*t), where m is the modulation index. Envelope detection is a simple and effective method of demodulation where a diode conducts during positive carrier peaks and a parallel RC filter charges to carrier peak and discharges slowly, recovering the original message envelope.",
+      "key_formulas": [
+        { "name": "Modulation Index (from envelope)", "formula": "m = (Vmax - Vmin) / (Vmax + Vmin)", "variables": "Vmax = peak-to-peak amplitude at envelope crest, Vmin = peak-to-peak amplitude at envelope trough" },
+        { "name": "Modulation Index (standard definition)", "formula": "m = Am / Ac", "variables": "Am = message amplitude, Ac = carrier amplitude" },
+        { "name": "Envelope Detector Time Constant", "formula": "1/fc << RC <= 1/fm", "variables": "Avoids diagonal clipping (RC too large) and carrier ripple (RC too small)" }
+      ],
+      "key_concepts": ["modulation index", "carrier signal", "modulating signal", "envelope detection", "overmodulation", "diagonal clipping"]
+    },
+    "components": [
+      { "name": "AM Modulator Board / IC", "spec": "MC1496 or discrete BJT/Op-amp modulator", "quantity": 1 },
+      { "name": "Diode (Envelope detector)", "spec": "1N34A germanium (preferred for low drop) or 1N4148", "quantity": 1 },
+      { "name": "Resistor", "spec": "10kΩ variable pot", "quantity": 1 },
+      { "name": "Capacitor", "spec": "0.01μF, 0.1μF", "quantity": 2 },
+      { "name": "Function Generator (Dual channel)", "spec": "fm=1kHz (message), fc=100kHz (carrier)", "quantity": 1 },
+      { "name": "CRO", "spec": "dual trace", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Set the carrier signal from function generator to 100kHz sine, amplitude 2V p-p. Set message signal to 1kHz sine, amplitude 1V p-p.",
+      "Step 2: Connect carrier and message outputs to the respective inputs of the AM Modulator circuit.",
+      "Step 3: Connect CRO Channel 1 to the modulator output. Adjust the carrier bias balance potentiometer on the board until a symmetric double-sideband full-carrier (DSB-FC) AM wave is observed.",
+      "Step 4: Vary the message signal amplitude from 0.2V to 2.5V. Measure Vmax and Vmin of the AM wave envelope on the CRO, and calculate modulation index m.",
+      "Step 5: Identify the states of undermodulation (m < 1), critical modulation (m = 1), and overmodulation (m > 1). Sketch the waveforms.",
+      "Step 6: Connect the modulator output to the input of the diode envelope detector circuit. Connect CRO Channel 2 to the envelope detector output. Adjust the RC filter time constant to recover a clean 1kHz sine wave.",
+      "Step 7: Increase the filter capacitor value to 10μF and observe diagonal clipping distortion."
+    ],
+    "observations": {
+      "table_headers": ["Message Am (V)", "Carrier Ac (V)", "Vmax (V)", "Vmin (V)", "Calculated m", "Modulation State"],
+      "sample_row": ["1.0", "2.0", "3.0", "1.0", "0.5", "Undermodulation"],
+      "what_to_plot": "AM waveform showing Vmax and Vmin; Demodulated waveform showing recovered message; Trapezoidal pattern in X-Y mode"
+    },
+    "expected_results": {
+      "description": "Calculated m should scale linearly with message amplitude Am. For Am=1V and Ac=2V, m=0.5. At overmodulation (m > 1), carrier phase shifts 180 degrees at envelope minimum, leading to distortion. Recovered message should be a clean sine wave of 1kHz frequency.",
+      "typical_values": [
+        { "parameter": "Modulation index for 1V message, 2V carrier", "expected": "0.5", "unit": "" },
+        { "parameter": "Optimal RC time constant (fm=1k, fc=100k)", "expected": "10kΩ * 0.01μF = 100μs", "unit": "seconds" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Output AM envelope is distorted and has flat bottoms",
+        "causes": ["Overmodulation (m > 1) because message amplitude is too high"],
+        "fix": "Reduce message signal amplitude from the function generator until Vmin is greater than zero."
+      },
+      {
+        "symptom": "Envelope detector output is a jagged sawtooth wave rather than a smooth sine",
+        "causes": ["RC time constant is too small (ripple is not filtered out)"],
+        "fix": "Increase filter capacitor value or increase load resistance."
+      },
+      {
+        "symptom": "Envelope detector output looks like a series of diagonal lines (clipping)",
+        "causes": ["RC time constant is too large (diagonal clipping distortion)"],
+        "fix": "Reduce the value of the capacitor or resistor to allow the filter to discharge faster than the envelope envelope rate."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is the bandwidth of an AM wave?", "a": "Bandwidth = 2 * fm, where fm is the maximum modulating frequency. For example, if message is 1kHz, bandwidth is 2kHz." },
+      { "q": "What is diagonal clipping and how is it prevented?", "a": "It occurs when the RC filter discharges too slowly, failing to follow the descending slope of the message envelope. Prevented by choosing RC <= sqrt(1 - m^2) / (2 * pi * fm * m)." },
+      { "q": "Why is modulation necessary in communication?", "a": "Modulation reduces antenna height (which must be of order λ/4), allows frequency-division multiplexing to share media, and improves signal-to-noise ratio." }
+    ]
+  },
+  {
+    "id": "sem5_EC24304_exp2_fm_modulation",
+    "semester": 5,
+    "lab_code": "EC24304",
+    "lab_name": "Communication System Lab",
+    "exp_number": 4,
+    "title": "FM Modulation and Demodulation",
+    "type": "hardware",
+    "aim": "To construct a frequency modulated wave using a voltage-controlled oscillator (VCO), determine modulation index, and demodulate using a phase-locked loop (PLL) detector.",
+    "theory": {
+      "summary": "Frequency Modulation (FM) is a process where the instantaneous frequency of the carrier is varied in linear proportion with the amplitude of the message signal. In an FM wave, carrier amplitude remains constant, but the frequency changes. The frequency deviation Δf is proportional to message amplitude: Δf = kv * Am. The modulation index is beta = Δf / fm. FM demodulation can be performed using a Phase-Locked Loop (PLL) which locks onto the incoming FM carrier frequency and generates an error control voltage that tracks the carrier frequency variations, recovering the original message.",
+      "key_formulas": [
+        { "name": "Frequency Deviation", "formula": "Δf = |f_max - f_carrier| = kv * Am", "variables": "kv = VCO frequency sensitivity in Hz/V" },
+        { "name": "Modulation Index (beta)", "formula": "beta = Δf / fm", "variables": "fm = frequency of message signal" },
+        { "name": "Carson's Rule (Bandwidth)", "formula": "BW = 2 * (Δf + fm) = 2 * fm * (beta + 1)", "variables": "Approximates transmission bandwidth of FM signal" }
+      ],
+      "key_concepts": ["frequency deviation", "modulation index (beta)", "VCO (Voltage Controlled Oscillator)", "PLL (Phase Locked Loop) detector", "Carson's Rule"]
+    },
+    "components": [
+      { "name": "FM Modulator IC / Kit", "spec": "VCO IC 566 or XR2206", "quantity": 1 },
+      { "name": "FM Demodulator IC (PLL)", "spec": "PLL IC 565 or NE564", "quantity": 1 },
+      { "name": "Resistors", "spec": "10kΩ variable pot, 4.7kΩ, 10kΩ", "quantity": 3 },
+      { "name": "Capacitors", "spec": "0.001μF, 0.01μF, 10μF", "quantity": 3 },
+      { "name": "Function Generator", "spec": "message 1kHz sine, carrier 50kHz center", "quantity": 1 },
+      { "name": "CRO & Frequency Counter", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Set up the VCO IC 566 circuit. Adjust the timing resistor Rt and capacitor Ct to set the free-running carrier frequency fo to 50kHz when message input is 0V.",
+      "Step 2: Apply a DC voltage to the VCO modulation pin. Measure the output frequency changes. Plot frequency vs DC voltage to find VCO sensitivity kv (Hz/V).",
+      "Step 3: Apply a 1kHz sine wave message signal to the VCO input. Adjust message amplitude to 1V. Observe the FM output wave on the CRO. Note the frequency compression (at positive peak of message) and expansion (at negative peak).",
+      "Step 4: Calculate frequency deviation Δf = (fmax - fmin) / 2 and modulation index beta = Δf / fm.",
+      "Step 5: Connect the FM output to the input of the PLL IC 565 demodulator circuit.",
+      "Step 6: Adjust the free-running frequency of the PLL VCO to match the carrier frequency (50kHz). Note the lock range of the PLL.",
+      "Step 7: Observe the demodulated output on CRO Channel 2. Compare it with the original message signal in terms of frequency and phase."
+    ],
+    "observations": {
+      "table_headers": ["Message Am (V)", "fmin (kHz)", "fmax (kHz)", "Deviation Δf (kHz)", "Modulation Index (beta)", "Vout p-p (V)"],
+      "sample_row": ["1.0", "42", "58", "8.0", "8.0", "0.45"],
+      "what_to_plot": "VCO calibration curve (Frequency vs Control Voltage); FM time-domain waveform showing frequency variation; Demodulated message wave"
+    },
+    "expected_results": {
+      "description": "VCO output frequency should vary linearly with control voltage. Frequency deviation should be proportional to message amplitude. Demodulated output should match message frequency (1kHz) and show no amplitude variation even if noise is injected into the FM signal.",
+      "typical_values": [
+        { "parameter": "VCO Center Frequency (fo)", "expected": "50", "unit": "kHz" },
+        { "parameter": "Frequency deviation for 1V message", "expected": "~8", "unit": "kHz" },
+        { "parameter": "PLL lock range", "expected": "±15", "unit": "kHz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "FM output frequency does not vary",
+        "causes": ["Message signal is connected to supply pin instead of modulation input pin", "Message amplitude is set to zero"],
+        "fix": "Verify VCO datasheet and connect message signal directly to modulation control pin (pin 5 of NE566)."
+      },
+      {
+        "symptom": "PLL does not demodulate (output is a flat line or noise)",
+        "causes": ["PLL free-running frequency is outside the lock-in range", "Input FM amplitude is too low for PLL to lock"],
+        "fix": "Adjust PLL timing resistor pot to bring free-running frequency closer to carrier frequency (50kHz). Increase FM input signal amplitude."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is the advantage of FM over AM?", "a": "FM has superior noise immunity because noise primarily affects signal amplitude (which is ignored by FM limiters). FM also has higher transmitter efficiency." },
+      { "q": "What is Carson's rule?", "a": "A rule of thumb for FM bandwidth: BW ≈ 2 * (Δf + fm). It includes 98% of the power of the FM signal." },
+      { "q": "Explain lock range and capture range of a PLL.", "a": "Lock range is the range of frequencies over which the PLL can track an input signal once locked. Capture range is the range of frequencies over which the PLL can acquire lock from an unlocked state (capture range is always smaller than lock range)." }
+    ]
+  }
+]

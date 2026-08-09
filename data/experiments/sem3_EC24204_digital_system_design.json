@@ -1,0 +1,55 @@
+[
+  {
+    "id": "sem3_EC24204_exp1_adder",
+    "semester": 3,
+    "lab_code": "EC24204",
+    "lab_name": "Digital System Design Lab",
+    "exp_number": 1,
+    "title": "Half Adder and Full Adder",
+    "type": "hardware",
+    "aim": "To design and realize Half Adder and Full Adder combinational circuits using basic logic gates.",
+    "theory": {
+      "summary": "An adder is a digital circuit that performs addition of numbers. A Half Adder adds two binary inputs A and B to output Sum (A ⊕ B) and Carry (A · B). A Full Adder adds three inputs A, B, and Cin to output Sum (A ⊕ B ⊕ Cin) and Carry (A·B + Cin·(A ⊕ B)).",
+      "key_formulas": [
+        { "name": "Half Adder Sum", "formula": "Sum = A ⊕ B", "variables": "XOR gate function" },
+        { "name": "Half Adder Carry", "formula": "Carry = A · B", "variables": "AND gate function" },
+        { "name": "Full Adder Sum", "formula": "Sum = A ⊕ B ⊕ Cin", "variables": "Double XOR gate" },
+        { "name": "Full Adder Carry", "formula": "Carry = A·B + Cin·(A ⊕ B)", "variables": "AND-OR gate logic" }
+      ],
+      "key_concepts": ["Half Adder", "Full Adder", "XOR gate", "AND-OR multiplexing", "Digital Sum"]
+    },
+    "components": [
+      { "name": "IC 7486 (XOR)", "spec": "Quad 2-input XOR", "quantity": 1 },
+      { "name": "IC 7408 (AND)", "spec": "Quad 2-input AND", "quantity": 1 },
+      { "name": "IC 7432 (OR)", "spec": "Quad 2-input OR", "quantity": 1 },
+      { "name": "Digital logic trainer board", "spec": "with built-in logic inputs/LEDs", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Mount the ICs on the breadboard. Connect VCC (pin 14) and GND (pin 7) for all ICs.",
+      "Step 2: Connect XOR gate inputs to logic toggles A and B. Connect XOR output to Sum LED.",
+      "Step 3: Connect AND gate inputs to logic toggles A and B. Connect AND output to Carry LED. Verify Half Adder truth table.",
+      "Step 4: Cascade XOR and AND gates to build the Full Adder according to logic diagram. Verify outputs for all 8 input combinations."
+    ],
+    "observations": {
+      "table_headers": ["A", "B", "Cin", "Sum (S)", "Carry (C)"],
+      "sample_row": ["1", "1", "1", "1", "1"],
+      "what_to_plot": "Verify and tabulate digital truth table output values."
+    },
+    "expected_results": {
+      "description": "Truth tables of Half Adder and Full Adder should match logic configurations. Sum should be high when odd numbers of inputs are high.",
+      "typical_values": [
+        { "parameter": "High Logic Level (VOH)", "expected": "> 3.5V (TTL)", "unit": "V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "LEDs remain dim or flickering",
+        "causes": ["IC power lines VCC/GND are not connected"],
+        "fix": "Always remember to hook up Pin 14 of TTL ICs to 5V and Pin 7 to Ground."
+      }
+    ],
+    "viva_questions": [
+      { "q": "Can you design a Full Adder using two Half Adders?", "a": "Yes, by connecting the sum output of the first Half Adder to the input of the second, and ORing the carry outputs of both Half Adders." }
+    ]
+  }
+]

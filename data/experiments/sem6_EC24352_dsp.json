@@ -1,0 +1,58 @@
+[
+  {
+    "id": "sem6_EC24352_exp1_discrete_signal",
+    "semester": 6,
+    "lab_code": "EC24352",
+    "lab_name": "Digital Signal Processing Lab",
+    "exp_number": 1,
+    "title": "Discrete Signal Generation",
+    "type": "software",
+    "aim": "To write MATLAB/Python code to generate discrete impulses, steps, ramps, and sinusoidal waveforms.",
+    "theory": {
+      "summary": "Discrete-time signals are represented as sequences of numbers. The fundamental signals used in DSP analysis are: 1. Unit Impulse delta[n] (1 at n=0, 0 elsewhere), 2. Unit Step u[n] (1 for n>=0, 0 elsewhere), 3. Unit Ramp r[n] (n for n>=0, 0 elsewhere), and 4. Discrete Sinusoid x[n] = A * sin(2*pi*f*n + phi) where f is the normalized digital frequency. These signals serve as basis functions for characterizing linear time-invariant (LTI) systems.",
+      "key_formulas": [
+        { "name": "Normalized digital frequency", "formula": "f = F / Fs", "variables": "F = analog frequency in Hz, Fs = sampling rate in Hz" }
+      ],
+      "key_concepts": ["Discrete-time sequence", "Unit impulse function", "Unit step function", "Unit ramp function", "Sampling theorem", "Digital sinusoid"]
+    },
+    "components": [
+      { "name": "MATLAB / Python Software Environment", "spec": "with NumPy and Matplotlib libraries", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Set up the time index vector n from -10 to 10.",
+      "Step 2: Generate the Unit Impulse signal: define a vector of zeros, and set the value corresponding to n=0 to 1.",
+      "Step 3: Generate the Unit Step signal: define a vector that is 1 for all indices where n >= 0, and 0 otherwise.",
+      "Step 4: Generate the Unit Ramp signal: multiply the Unit Step signal vector by the time index vector n.",
+      "Step 5: Generate the Discrete Sinusoidal signal: set sample rate Fs = 1000Hz, signal frequency F = 50Hz, and generate x[n] = sin(2*pi*(F/Fs)*n) for n = 0 to 50.",
+      "Step 6: Plot all signals using stem plots (discrete time representation) with proper labels and legends."
+    ],
+    "observations": {
+      "table_headers": ["Index (n)", "Impulse delta[n]", "Step u[n]", "Ramp r[n]", "Sinusoid x[n]"],
+      "sample_row": ["0", "1.0", "1.0", "0.0", "0.0"],
+      "what_to_plot": "Discrete stem plots of amplitude vs sample index n for each signal."
+    },
+    "expected_results": {
+      "description": "The generated plots must display discrete sequences of values as individual stems. The impulse should be a single peak at n=0, the step should be flat from n=0 onwards, the ramp should increase linearly, and the sinusoid should show a periodic oscillation.",
+      "typical_values": [
+        { "parameter": "Digital frequency f", "expected": "0.05", "unit": "cycles/sample" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Plots show continuous lines instead of discrete points",
+        "causes": ["Used plt.plot() instead of plt.stem() in Python or plot() instead of stem() in MATLAB"],
+        "fix": "Replace standard line plotting functions with stem functions to represent discrete time sequences."
+      },
+      {
+        "symptom": "The sinusoidal plot appears aliased or distorted",
+        "causes": ["Sampling frequency Fs is set too low (less than Nyquist rate 2F)"],
+        "fix": "Ensure Fs >= 2 * F to satisfy the Nyquist sampling criterion."
+      }
+    ],
+    "viva_questions": [
+      { "q": "Why do we use stem plots instead of line plots in DSP?", "a": "Discrete-time signals are only defined at integer sample indices. Line plots imply values exist between samples, which is incorrect in discrete-time systems." },
+      { "q": "What is the relation between analog frequency F and digital frequency f?", "a": "Digital frequency f = F/Fs, measured in cycles/sample, where Fs is the sampling rate." },
+      { "q": "How is the unit ramp function mathematically related to the unit step function?", "a": "The unit ramp r[n] can be defined as n * u[n], where u[n] is the unit step function." }
+    ]
+  }
+]

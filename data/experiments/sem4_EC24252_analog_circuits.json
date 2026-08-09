@@ -1,0 +1,195 @@
+[
+  {
+    "id": "sem4_EC24252_exp1_rc_filters",
+    "semester": 4,
+    "lab_code": "EC24252",
+    "lab_name": "Analog Circuits Lab",
+    "exp_number": 1,
+    "title": "Low-pass RC circuit design and frequency response",
+    "type": "hardware",
+    "aim": "To construct passive RC low-pass filters, measure frequency response, and determine cutoff frequency.",
+    "theory": {
+      "summary": "Passive RC filters use resistors and capacitors to attenuate high frequencies while passing low frequencies. The cutoff frequency fc is the frequency at which the output voltage drops to 70.7% (-3dB) of the input voltage.",
+      "key_formulas": [
+        { "name": "Cutoff Frequency", "formula": "fc = 1 / (2 * pi * R * C)", "variables": "R = resistance, C = capacitance" }
+      ],
+      "key_concepts": ["attenuation", "cutoff frequency", "Bode plot"]
+    },
+    "components": [
+      { "name": "Resistor 10kΩ", "spec": "0.25W", "quantity": 1 },
+      { "name": "Capacitor 0.01μF", "spec": "ceramic", "quantity": 1 },
+      { "name": "Function Generator", "spec": "sine wave", "quantity": 1 },
+      { "name": "CRO", "spec": "dual trace", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Connect resistor in series with function generator, capacitor in parallel with CRO.",
+      "Step 2: Set input amplitude to 2V peak-to-peak and vary frequency from 10Hz to 100kHz.",
+      "Step 3: Measure output and determine cutoff frequency."
+    ],
+    "observations": {
+      "table_headers": ["Frequency (Hz)", "Vin (V)", "Vout (V)", "Gain (dB)"],
+      "sample_row": ["1590", "2.0", "1.41", "-3.0"],
+      "what_to_plot": "Gain in dB vs Log Frequency"
+    },
+    "expected_results": {
+      "description": "Output should drop at -20dB/decade beyond 1.59kHz.",
+      "typical_values": [
+        { "parameter": "Cutoff frequency (fc)", "expected": "1591", "unit": "Hz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Output equals input at all frequencies",
+        "causes": ["CRO probe connected to input instead of output"],
+        "fix": "Connect Channel 2 across the capacitor."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is the roll-off rate of single-stage RC?", "a": "-20 dB/decade." }
+    ]
+  },
+  {
+    "id": "sem4_EC24252_exp3_transistor_amplifier",
+    "semester": 4,
+    "lab_code": "EC24252",
+    "lab_name": "Analog Circuits Lab",
+    "exp_number": 3,
+    "title": "Single-stage amplifier frequency response",
+    "type": "hardware",
+    "aim": "To plot the frequency response of a single-stage Common Emitter BJT amplifier and determine bandwidth.",
+    "theory": {
+      "summary": "A common emitter BJT amplifier provides high voltage and current gain. High-pass coupling/bypass capacitors limit gain at low frequencies, while transistor junction capacitance limits gain at high frequencies.",
+      "key_formulas": [
+        { "name": "Voltage Gain", "formula": "Av = -Rc / re", "variables": "re = thermal voltage / emitter current" }
+      ],
+      "key_concepts": ["CE Amplifier", "Bandwidth", "Gain-bandwidth product"]
+    },
+    "components": [
+      { "name": "NPN Transistor BC547", "spec": "TO-92", "quantity": 1 },
+      { "name": "Resistor pack", "spec": "R1=33k, R2=10k, Rc=3.3k, Re=1k", "quantity": 1 },
+      { "name": "Capacitors", "spec": "C1=10uF, C2=10uF, CE=100uF", "quantity": 3 }
+    ],
+    "procedure": [
+      "Step 1: Set up CE bias configuration with R1, R2, Rc, and Re.",
+      "Step 2: Connect input AC signal of 10mV peak-to-peak through coupling capacitor.",
+      "Step 3: Measure output voltage across Rc as frequency is swept from 20Hz to 1MHz."
+    ],
+    "observations": {
+      "table_headers": ["Frequency (Hz)", "Vin (mV)", "Vout (V)", "Gain (dB)"],
+      "sample_row": ["1000", "10", "1.5", "43.5"],
+      "what_to_plot": "Gain in dB vs Log Frequency"
+    },
+    "expected_results": {
+      "description": "Gain should remain constant in mid-band (~150 V/V) and drop off at low/high frequency limits.",
+      "typical_values": [
+        { "parameter": "Mid-band gain", "expected": "~150", "unit": "V/V" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Gain is extremely low (~1)",
+        "causes": ["Bypass capacitor CE is open or disconnected"],
+        "fix": "Verify that CE is firmly connected across Re to bypass AC currents to ground."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is the phase shift in a CE amplifier?", "a": "180 degrees phase inversion." }
+    ]
+  },
+  {
+    "id": "sem4_EC24252_exp7_phase_shift",
+    "semester": 4,
+    "lab_code": "EC24252",
+    "lab_name": "Analog Circuits Lab",
+    "exp_number": 7,
+    "title": "RC Phase Shift Oscillator",
+    "type": "hardware",
+    "aim": "To design and test an RC phase-shift oscillator using an op-amp and verify Barkhausen criteria.",
+    "theory": {
+      "summary": "An RC phase-shift oscillator uses a cascade of three 60-degree feedback RC stages to provide 180 degrees shift, combined with inverting op-amp phase inversion (180 degrees).",
+      "key_formulas": [
+        { "name": "Oscillation Frequency", "formula": "fo = 1 / (2 * pi * R * C * sqrt(6))", "variables": "R = resistor, C = capacitor" }
+      ],
+      "key_concepts": ["Barkhausen criteria", "loop gain", "sustained oscillations"]
+    },
+    "components": [
+      { "name": "Op-Amp LM741", "spec": "8-pin DIP", "quantity": 1 },
+      { "name": "Resistor pack", "spec": "10kΩ", "quantity": 4 },
+      { "name": "Capacitor pack", "spec": "0.01μF", "quantity": 3 }
+    ],
+    "procedure": [
+      "Step 1: Set up inverting amplifier with LM741.",
+      "Step 2: Connect three-stage RC ladder in feedback loop from pin 6 back to pin 2.",
+      "Step 3: Adjust Rf pot until sinusoids appear on CRO."
+    ],
+    "observations": {
+      "table_headers": ["R (kΩ)", "C (μF)", "Theoretical fo (Hz)", "Measured fo (Hz)"],
+      "sample_row": ["10", "0.01", "650", "635"],
+      "what_to_plot": "Output sinusoidal waveform"
+    },
+    "expected_results": {
+      "description": "A clean sine output of ~650Hz.",
+      "typical_values": [
+        { "parameter": "Frequency", "expected": "650", "unit": "Hz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "Flat line output",
+        "causes": ["Rf potentiometer set below 290kΩ"],
+        "fix": "Increase Rf potentiometer resistance to exceed gain of 29."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is loop gain at oscillation?", "a": "Exactly 1." }
+    ]
+  },
+  {
+    "id": "sem4_EC24252_exp8_wien_bridge",
+    "semester": 4,
+    "lab_code": "EC24252",
+    "lab_name": "Analog Circuits Lab",
+    "exp_number": 8,
+    "title": "Wien Bridge Oscillator",
+    "type": "hardware",
+    "aim": "To design and test a Wien Bridge oscillator and verify gain requirements.",
+    "theory": {
+      "summary": "Wien Bridge oscillators use a lead-lag feedback bandpass network providing zero phase shift at resonance (attenuation β = 1/3), requiring non-inverting gain of at least 3.",
+      "key_formulas": [
+        { "name": "Resonant Frequency", "formula": "fo = 1 / (2 * pi * R * C)", "variables": "assuming equal bridge components" }
+      ],
+      "key_concepts": ["lead-lag network", "amplitude stabilization"]
+    },
+    "components": [
+      { "name": "Op-Amp LM741", "spec": "DIP", "quantity": 1 },
+      { "name": "Resistors", "spec": "10kΩ", "quantity": 4 },
+      { "name": "Capacitors", "spec": "0.01μF", "quantity": 2 }
+    ],
+    "procedure": [
+      "Step 1: Set up non-inverting gain loop with Rf pot.",
+      "Step 2: Connect series RC from output to pin 3, and parallel RC from pin 3 to ground.",
+      "Step 3: Vary Rf pot until oscillations sustain."
+    ],
+    "observations": {
+      "table_headers": ["R (kΩ)", "C (μF)", "Theoretical fo (Hz)", "Measured fo (Hz)"],
+      "sample_row": ["10", "0.01", "1591", "1580"],
+      "what_to_plot": "Output resonant sinusoids"
+    },
+    "expected_results": {
+      "description": "Sinusoidal oscillations at ~1.59kHz.",
+      "typical_values": [
+        { "parameter": "Frequency", "expected": "1591", "unit": "Hz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "No oscillations",
+        "causes": ["Lead-lag connected to wrong input pin"],
+        "fix": "Ensure positive feedback connects to pin 3, not pin 2."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is feedback factor at resonance?", "a": "1/3." }
+    ]
+  }
+]

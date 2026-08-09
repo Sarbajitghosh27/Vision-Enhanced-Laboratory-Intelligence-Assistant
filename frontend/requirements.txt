@@ -1,0 +1,7 @@
+# Streamlit Frontend Requirements
+streamlit==1.56.0
+requests==2.33.1
+pandas==3.0.2
+plotly==6.7.0
+numpy==2.4.4
+pillow==12.2.0

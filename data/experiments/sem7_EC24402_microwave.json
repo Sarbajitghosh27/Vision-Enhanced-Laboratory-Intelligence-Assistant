@@ -1,0 +1,63 @@
+[
+  {
+    "id": "sem7_EC24402_exp1_reflex_klystron",
+    "semester": 7,
+    "lab_code": "EC24402",
+    "lab_name": "Microwave Lab",
+    "exp_number": 1,
+    "title": "Reflex Klystron characteristics",
+    "type": "hardware",
+    "aim": "To plot output power and mode characteristics of Reflex Klystron tube.",
+    "theory": {
+      "summary": "The Reflex Klystron is a single-cavity microwave tube generator that operates on the principle of velocity modulation and density modulation. Electrons emitted from the cathode are accelerated by the anode voltage towards the cavity. As they pass through the cavity gap, they experience velocity modulation from the RF field. After passing the cavity, the electrons enter a region of retarding field created by the Repeller electrode (held at a negative potential). The electrons are reflected back towards the cavity, forming electron bunches. If these bunches return to the cavity when the RF field is retarding, they surrender energy to the cavity, sustaining microwave oscillations. Different Modes are obtained at specific negative repeller voltages corresponding to transit times of N + 3/4 cycles.",
+      "key_formulas": [
+        { "name": "Transit Time in Repeller Space", "formula": "t = (N + 3/4) * T", "variables": "N = mode integer (e.g. 1, 2, 3), T = time period of RF oscillations" }
+      ],
+      "key_concepts": ["Reflex Klystron", "Velocity modulation", "Applegate diagram", "Bunching process", "Repeller voltage modes", "Guide wavelength"]
+    },
+    "components": [
+      { "name": "Reflex Klystron Tube (2K25)", "spec": "X-band (8.2-12.4 GHz)", "quantity": 1 },
+      { "name": "Klystron Power Supply", "spec": "Beam supply 300V, Repeller supply 0 to -270V", "quantity": 1 },
+      { "name": "Klystron Mount with cooling fan", "spec": "", "quantity": 1 },
+      { "name": "Isolator & Variable Attenuator", "spec": "", "quantity": 1 },
+      { "name": "Frequency Meter (Cavity type)", "spec": "", "quantity": 1 },
+      { "name": "Detector Mount and VSWR Meter / Oscilloscope", "spec": "", "quantity": 1 }
+    ],
+    "procedure": [
+      "Step 1: Assemble the microwave bench: Reflex Klystron tube connected to the Isolator, Variable Attenuator, Frequency Meter, and Detector Mount sequentially using waveguide flanges.",
+      "Step 2: Connect the Klystron Power Supply cables to the Klystron tube (Heater, Cathode, Anode, and Repeller leads). Set repeller voltage control knob to maximum negative voltage before powering on.",
+      "Step 3: Turn on the cooling fan and the Klystron Power Supply. Keep beam voltage at 250V-300V.",
+      "Step 4: Gradually decrease the negative repeller voltage from -200V. Observe the square wave output on the oscilloscope or VSWR meter (ensure the beam is square-wave modulated at 1kHz).",
+      "Step 5: Record the repeller voltages where output power starts, peaks (center of mode), and falls back to zero. These peak zones correspond to different Klystron modes.",
+      "Step 6: For each mode center, adjust the mechanical frequency meter cavity to measure the corresponding oscillation frequency. Plot Output Power vs Repeller Voltage, and Frequency vs Repeller Voltage."
+    ],
+    "observations": {
+      "table_headers": ["Repeller Voltage (V)", "Beam Current (mA)", "Output Power (mV)", "Frequency (GHz)"],
+      "sample_row": ["-120", "28", "80.0", "9.62"],
+      "what_to_plot": "Reflex Klystron Modes: Output Power vs Repeller Voltage (y-axis power, x-axis negative repeller voltage)."
+    },
+    "expected_results": {
+      "description": "Output power should peak at specific negative repeller voltages (mode centers) and drop to zero between modes. The frequency of oscillation should show a small electronic tuning range across each mode.",
+      "typical_values": [
+        { "parameter": "Typical Output Frequency", "expected": "9.6", "unit": "GHz" }
+      ]
+    },
+    "common_errors": [
+      {
+        "symptom": "No microwave output power is observed",
+        "causes": ["Repeller voltage is positive or too close to 0V (will draw current and damage tube)", "Cooling fan is not on", "Attenuator is fully closed"],
+        "fix": "Always keep repeller voltage negative relative to the cathode. Turn variable attenuator slightly open to permit wave propagation."
+      },
+      {
+        "symptom": "Beam current exceeds 35mA, causing power supply trip",
+        "causes": ["Beam voltage is set too high or tube has deteriorated"],
+        "fix": "Reduce beam voltage immediately to avoid burning out the Klystron tube heater and anode cavity."
+      }
+    ],
+    "viva_questions": [
+      { "q": "What is velocity modulation in a Reflex Klystron?", "a": "It is the process where electrons passing through the cavity gap are accelerated or decelerated depending on the instantaneous polarity of the alternating RF voltage across the gap." },
+      { "q": "Why are there different modes of operation in a Reflex Klystron?", "a": "Oscillations can only occur if the returning electron bunches arrive in phase with the retarding RF cavity voltage. This happens when the round-trip transit time is (N + 3/4) RF cycles, where N is an integer representing the mode number." },
+      { "q": "Why is an isolator used in the microwave bench setup?", "a": "An isolator allows microwave energy to travel in only one direction, preventing reflected waves from mismatched loads from returning to the Klystron tube and causing frequency instability or damage." }
+    ]
+  }
+]
