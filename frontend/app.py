@@ -378,14 +378,14 @@ def get_all_experiments(semester=None):
 
 def get_experiment_detail(exp_id):
     try:
-        r = requests.get(f"{API_BASE_URL}/experiments/{exp_id}", timeout=25)
+        r = requests.get(f"{API_BASE_URL}/experiments/{exp_id}", timeout=50)
         if r.status_code == 200:
             return r.json()
         else:
             st.error(f"Failed to fetch details for {exp_id}: Server returned status code {r.status_code}")
             return None
     except requests.exceptions.Timeout:
-        st.error(f"⏳ Request for experiment '{exp_id}' timed out. The backend might still be waking up. Please refresh or retry.")
+        st.error(f"⏳ Request for experiment '{exp_id}' timed out. If the backend is still spinning up, please retry.")
         return None
     except Exception as e:
         st.error(f"Failed to fetch details for {exp_id}: {e}")
