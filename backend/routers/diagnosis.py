@@ -343,29 +343,23 @@ def upload_circuit_image(
     cv_res = analyze_breadboard_photo(exp_id=experiment_id, image_filename=filename)
     
     # ── PyTorch GNN Topology Inference ──
-    # Construct a 5x5 adjacency matrix representing layout nodes (Voltage, Resistor, Diode, Ground, Opamp)
     adj_matrix = np.zeros((5, 5))
-    feature_matrix = np.eye(5) # Identiy one-hot features
+    feature_matrix = np.eye(5)
     
-    has_topology_fault = False
-    for f in cv_res.get("faults", []):
-        if "topology mismatch" in str(f.get("type", "")).lower() or "topology mismatch" in str(f.get("description", "")).lower():
-            has_topology_fault = True
-            break
-
-    # Inject connection topology based on matching errors
-    if len(cv_res["faults"]) == 1 and cv_res["faults"][0]["type"] == "None":
-        # Normal connected topology
+    faults = cv_res.get("faults", [])
+    active_faults = [f for f in faults if f.get("type") not in [None, "None", ""]]
+    
+    if not active_faults:
+        # Full closed loop topology: V1 -> R1 -> D1 -> GND -> V1
         adj_matrix[0, 1] = adj_matrix[1, 0] = 1
         adj_matrix[1, 2] = adj_matrix[2, 1] = 1
         adj_matrix[2, 3] = adj_matrix[3, 2] = 1
+        adj_matrix[3, 0] = adj_matrix[0, 3] = 1
     else:
-        # Faulty topology
-        # Sever some link or add wrong link
+        # Partial / broken graph representation
         adj_matrix[0, 1] = adj_matrix[1, 0] = 1
-        # edge 1-2 or diode node disconnected
         
-    gnn_res = predict_circuit_anomaly(adj_matrix, feature_matrix, exp_id=experiment_id, has_topology_fault=has_topology_fault)
+    gnn_res = predict_circuit_anomaly(adj_matrix, feature_matrix, exp_id=experiment_id, faults=faults)
     cv_res["gnn_topology_check"] = gnn_res
     
     return cv_res

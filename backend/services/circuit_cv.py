@@ -141,13 +141,14 @@ def _encode_image_base64(image_path: str) -> Optional[str]:
 
 
 def run_gemini_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[dict]) -> Optional[dict]:
-    """Calls Gemini Vision and returns a structured fault dict. Returns None on failure."""
+    """Calls Gemini Vision across Flash, Flash-Lite, and 2.5-Flash with multi-model fallback."""
     active_key = os.getenv("GEMINI_API_KEY") or GEMINI_API_KEY
     if not active_key:
         print("Gemini API key not set.")
         return None
 
     prompt = _build_gemini_prompt(exp_data, exp_id)
+    candidate_models = ["gemini-2.0-flash", "gemini-2.0-flash-lite", "gemini-2.5-flash"]
 
     # 1. SDK path (google.genai)
     if GENAI_AVAILABLE:
@@ -159,42 +160,57 @@ def run_gemini_vision_analysis(image_path: str, exp_id: str, exp_data: Optional[
             mime_map  = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
             mime_type = mime_map.get(ext, "image/jpeg")
             image_part = genai_types.Part.from_bytes(data=img_bytes, mime_type=mime_type)
-            response   = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[prompt, image_part],
-                config=genai_types.GenerateContentConfig(temperature=0.1, max_output_tokens=4096)
-            )
-            if response.text:
-                return _parse_gemini_json(response.text.strip())
+            
+            for m_name in candidate_models:
+                try:
+                    response = client.models.generate_content(
+                        model=m_name,
+                        contents=[prompt, image_part],
+                        config=genai_types.GenerateContentConfig(temperature=0.1, max_output_tokens=4096)
+                    )
+                    if response.text:
+                        parsed = _parse_gemini_json(response.text.strip())
+                        if parsed:
+                            return parsed
+                except Exception as e:
+                    print(f"Gemini SDK ({m_name}) error: {e}")
         except Exception as e:
-            print(f"Gemini SDK path failed: {e}")
+            print(f"Gemini SDK init error: {e}")
 
     # 2. Direct REST fallback (safe UTF-8 / JSON encoding)
-    try:
-        import requests
-        b64_image = _encode_image_base64(image_path)
-        if not b64_image:
-            return None
-        ext      = os.path.splitext(image_path)[1].lower()
-        mime_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
-        mime_type = mime_map.get(ext, "image/jpeg")
-        payload = {
-            "contents": [{"parts": [
-                {"text": prompt},
-                {"inline_data": {"mime_type": mime_type, "data": b64_image}}
-            ]}],
-            "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}
-        }
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={active_key}"
-        headers = {"Content-Type": "application/json; charset=utf-8"}
-        r = requests.post(url, data=json.dumps(payload, ensure_ascii=True), headers=headers, timeout=45)
-        if r.status_code == 200:
-            raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
-            return _parse_gemini_json(raw)
-        else:
-            print(f"Gemini REST returned status {r.status_code}: {r.text}")
-    except Exception as e:
-        print(f"Gemini REST API path failed: {e}")
+    import requests
+    b64_image = _encode_image_base64(image_path)
+    if not b64_image:
+        return None
+    ext      = os.path.splitext(image_path)[1].lower()
+    mime_map = {".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"}
+    mime_type = mime_map.get(ext, "image/jpeg")
+    payload = {
+        "contents": [{"parts": [
+            {"text": prompt},
+            {"inline_data": {"mime_type": mime_type, "data": b64_image}}
+        ]}],
+        "generationConfig": {"temperature": 0.1, "maxOutputTokens": 4096}
+    }
+    headers = {"Content-Type": "application/json; charset=utf-8"}
+    
+    for m_name in candidate_models:
+        try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m_name}:generateContent?key={active_key}"
+            r = requests.post(url, data=json.dumps(payload, ensure_ascii=True), headers=headers, timeout=30)
+            if r.status_code == 200:
+                raw = r.json()["candidates"][0]["content"]["parts"][0]["text"].strip()
+                parsed = _parse_gemini_json(raw)
+                if parsed:
+                    return parsed
+            elif r.status_code == 429:
+                print(f"Gemini REST ({m_name}) rate limited, trying next model...")
+                continue
+            else:
+                print(f"Gemini REST ({m_name}) status {r.status_code}")
+        except Exception as e:
+            print(f"Gemini REST ({m_name}) failed: {e}")
+            
     return None
 
 
