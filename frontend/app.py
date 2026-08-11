@@ -11,6 +11,7 @@ import sys
 import pandas as pd
 import plotly.graph_objects as go
 import plotly.express as px
+from urllib.parse import quote, unquote
 
 # Ensure the project root is in the python path for importing modules
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -28,309 +29,445 @@ def find_matching_db_exp(syllabus_exp, db_exps):
 # ── Backend Configuration ───────────────────────────────────────────────────
 API_BASE_URL = os.getenv("API_BASE_URL", "https://vision-enhanced-laboratory-intelligence.onrender.com/api")
 
-# ── Load Logo Assets ─────────────────────────────────────────────────────────
-import base64
-from PIL import Image
-logo_path = os.path.join(os.path.dirname(__file__), "logo.png")
-logo_square_path = os.path.join(os.path.dirname(__file__), "logo_square.png")
-logo_img = None
-logo_html_src = ""
-logo_square_html_src = ""
-
-if os.path.exists(logo_path):
-    try:
-        with open(logo_path, "rb") as f:
-            logo_base64 = base64.b64encode(f.read()).decode("utf-8")
-            logo_html_src = f"data:image/png;base64,{logo_base64}"
-    except Exception:
-        pass
-
-if os.path.exists(logo_square_path):
-    try:
-        logo_img = Image.open(logo_square_path)
-        with open(logo_square_path, "rb") as f:
-            logo_square_base64 = base64.b64encode(f.read()).decode("utf-8")
-            logo_square_html_src = f"data:image/png;base64,{logo_square_base64}"
-    except Exception:
-        pass
-
 # ── Page Configuration ────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="VELIA — Vision-Enhanced Laboratory Intelligence Assistant",
-    page_icon=logo_img if logo_img else None,
+    page_icon=None,
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
-# ── Custom Premium Styling (Dark Theme, Glassmorphism, Custom Fonts) ─────────
+# ── Custom Premium Styling (Notion-style, Zinc Black, Poppins) ──────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap');
   
   html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    color: #e2e8f0;
+    font-family: 'DM Sans', sans-serif;
+    color: #a1a1aa;
+    font-size: 15px;
+    line-height: 1.65;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
-    font-weight: 700;
-    color: #f8fafc;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #fafafa;
+    letter-spacing: -0.3px;
   }
   
-  /* Main background gradient matching enterprise AI platforms */
+  h1 { font-size: 2.25rem; font-weight: 700; }
+  h2 { font-size: 1.6rem; font-weight: 600; }
+  h3 { font-size: 1.25rem; font-weight: 600; color: #e4e4e7; }
+  
+  p, li, span, div {
+    font-family: 'DM Sans', sans-serif;
+  }
+  
+  /* Zinc 950 black background — Notion-style */
   .stApp {
-    background-color: #05070f;
-    background-image: 
-        radial-gradient(at 5% 10%, rgba(59, 130, 246, 0.12) 0px, transparent 45%),
-        radial-gradient(at 95% 85%, rgba(139, 92, 246, 0.12) 0px, transparent 45%),
-        radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 50%);
-    background-attachment: fixed;
+    background-color: #09090b;
+    background-image: none;
   }
   
-  /* Sidebar dark styling */
-  [data-testid="stSidebar"] {
-    background-color: #0b0f19 !important;
-    border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+  /* Completely hide sidebar and collapse button */
+  [data-testid="stSidebar"],
+  section[data-testid="stSidebar"],
+  [data-testid="collapsedControl"],
+  button[data-testid="baseButton-headerNoPadding"],
+  button[aria-label="Close sidebar"],
+  button[aria-label="Open sidebar"] {
+    display: none !important;
   }
   
-  /* Premium Glassmorphism Cards */
+  /* Minimal zinc cards */
   .glass-card {
-    background: rgba(15, 23, 42, 0.6) !important;
-    backdrop-filter: blur(12px) !important;
-    -webkit-backdrop-filter: blur(12px) !important;
-    border: 1px solid rgba(255, 255, 255, 0.07) !important;
-    border-radius: 12px !important;
+    background: #18181b !important;
+    border: 1px solid #27272a !important;
+    border-radius: 10px !important;
     padding: 24px !important;
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7) !important;
-    margin-bottom: 20px !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    margin-bottom: 16px !important;
+    transition: border-color 0.2s ease !important;
   }
   
   .glass-card:hover {
-    transform: translateY(-3px) !important;
-    border-color: rgba(59, 130, 246, 0.25) !important;
-    box-shadow: 0 15px 35px -5px rgba(59, 130, 246, 0.1) !important;
+    border-color: #3b82f6 !important;
   }
   
   /* Capability Card Deck */
   .feat-card {
-    background: rgba(17, 24, 39, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.04);
+    background: #18181b;
+    border: 1px solid #27272a;
     border-radius: 10px;
-    padding: 18px;
+    padding: 20px;
     height: 100%;
-    transition: all 0.25s ease;
+    transition: border-color 0.2s ease;
   }
   
   .feat-card:hover {
-    border-color: rgba(139, 92, 246, 0.2);
-    background: rgba(17, 24, 39, 0.6);
-    box-shadow: 0 5px 20px rgba(139, 92, 246, 0.05);
+    border-color: #3b82f6;
   }
   
   .glow-text {
-    background: linear-gradient(135deg, #60a5fa, #c084fc);
+    background: linear-gradient(135deg, #e4e4e7, #a1a1aa);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
   
   .formula-block {
-    background: #090d16;
-    border-radius: 8px;
+    background: #141415;
+    border-radius: 6px;
     padding: 14px 18px;
-    font-family: monospace;
-    font-size: 14px;
+    font-family: 'DM Mono', 'Fira Code', monospace;
+    font-size: 13.5px;
     margin: 8px 0;
-    border-left: 4px solid #a78bfa;
-    color: #cbd5e1;
-    border-right: 1px solid rgba(255, 255, 255, 0.03);
+    border-left: 3px solid #3b82f6;
+    color: #a1a1aa;
+    border: 1px solid #27272a;
   }
 
   .source-badge {
     font-size: 11px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    background: rgba(30, 58, 138, 0.3);
-    color: #93c5fd;
-    font-family: monospace;
-    border: 1px solid rgba(59, 130, 246, 0.2);
+    padding: 3px 9px;
+    border-radius: 4px;
+    background: #1e1e22;
+    color: #71717a;
+    font-family: 'DM Sans', sans-serif;
+    border: 1px solid #27272a;
+    letter-spacing: 0.3px;
   }
   
   /* Custom styled Badges */
   .badge {
     display: inline-block;
-    padding: 3px 8px;
-    border-radius: 5px;
+    padding: 2px 8px;
+    border-radius: 4px;
     font-size: 10px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.6px;
     margin-right: 6px;
+    font-family: 'DM Sans', sans-serif;
   }
   
   .badge-easy {
-    background: rgba(16, 185, 129, 0.12);
-    color: #34d399;
-    border: 1px solid rgba(16, 185, 129, 0.2);
+    background: #14241e;
+    color: #4ade80;
+    border: 1px solid #166534;
   }
   
   .badge-medium {
-    background: rgba(245, 158, 11, 0.12);
+    background: #241e10;
     color: #fbbf24;
-    border: 1px solid rgba(245, 158, 11, 0.2);
+    border: 1px solid #78350f;
   }
   
   .badge-hard {
-    background: rgba(239, 68, 68, 0.12);
+    background: #241414;
     color: #f87171;
-    border: 1px solid rgba(239, 68, 68, 0.2);
+    border: 1px solid #7f1d1d;
   }
   
-  /* Streamlit Tabs Custom Design */
+  /* Streamlit Tabs — Notion-style */
   button[data-baseweb="tab"] {
       background-color: transparent !important;
-      border: 1px solid rgba(255, 255, 255, 0.05) !important;
-      border-radius: 8px !important;
-      padding: 8px 16px !important;
+      border: 1px solid #27272a !important;
+      border-radius: 6px !important;
+      padding: 7px 16px !important;
       margin-right: 6px !important;
-      color: #94a3b8 !important;
-      transition: all 0.3s ease !important;
+      color: #71717a !important;
+      font-family: 'DM Sans', sans-serif !important;
+      font-size: 13.5px !important;
+      font-weight: 500 !important;
+      transition: all 0.15s ease !important;
   }
   button[data-baseweb="tab"]:hover {
-      border-color: rgba(59, 130, 246, 0.4) !important;
-      color: #f1f5f9 !important;
+      border-color: #3b82f6 !important;
+      color: #e4e4e7 !important;
   }
   button[data-baseweb="tab"][aria-selected="true"] {
-      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(124, 58, 237, 0.15)) !important;
+      background: #1a1a1e !important;
       border-color: #3b82f6 !important;
-      color: #60a5fa !important;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.15) !important;
+      color: #fafafa !important;
   }
   
-  /* Conversational Chat Bubbles */
+  /* Chat Bubbles */
   .chat-bubble {
-    border-radius: 10px;
+    border-radius: 8px;
     padding: 14px 18px;
     margin: 10px 0;
     max-width: 85%;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 14.5px;
+    line-height: 1.6;
+    font-family: 'DM Sans', sans-serif;
   }
-  
   .chat-ai {
-    background: rgba(30, 41, 59, 0.6);
-    border-left: 4px solid #3b82f6;
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
-    color: #cbd5e1;
+    background: #18181b;
+    border-left: 3px solid #3b82f6;
+    border: 1px solid #27272a;
+    color: #a1a1aa;
     align-self: flex-start;
   }
-  
   .chat-student {
-    background: rgba(124, 58, 237, 0.12);
-    border-left: 4px solid #8b5cf6;
-    border-top: 1px solid rgba(255, 255, 255, 0.03);
-    color: #e2e8f0;
+    background: #1a1a1e;
+    border: 1px solid #27272a;
+    border-left: 3px solid #52525b;
+    color: #e4e4e7;
     margin-left: auto;
   }
 
-  /* File Uploader custom border styling */
+  /* File Uploader */
   [data-testid="stFileUploader"] {
-    background: rgba(15, 23, 42, 0.4) !important;
-    border: 2px dashed rgba(59, 130, 246, 0.2) !important;
-    border-radius: 10px !important;
+    background: #141415 !important;
+    border: 2px dashed #27272a !important;
+    border-radius: 8px !important;
   }
   
-  /* Interactive Premium Buttons styling */
+  /* Buttons — minimal zinc style */
   .stButton>button {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+    background: #3b82f6 !important;
     color: #ffffff !important;
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-    padding: 8px 20px !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-family: 'DM Sans', sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 13.5px !important;
+    letter-spacing: 0.1px !important;
+    transition: background 0.15s ease !important;
+    padding: 7px 18px !important;
+    width: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
   }
   .stButton>button:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 0 15px rgba(37, 99, 235, 0.4) !important;
-    border-color: rgba(255, 255, 255, 0.2) !important;
-    background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+    background: #2563eb !important;
   }
-  .stButton>button:active {
-    transform: translateY(0) !important;
-  }
-  
-  /* Secondary/Exit button style overrides */
   .stButton>button[kind="secondary"] {
-    background: rgba(30, 41, 59, 0.5) !important;
-    color: #e2e8f0 !important;
-    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    background: #18181b !important;
+    color: #a1a1aa !important;
+    border: 1px solid #27272a !important;
   }
   .stButton>button[kind="secondary"]:hover {
-    background: rgba(30, 41, 59, 0.8) !important;
-    box-shadow: 0 0 10px rgba(148, 163, 184, 0.1) !important;
+    border-color: #3b82f6 !important;
+    color: #fafafa !important;
   }
+
 
   /* Developer Credit Sidebar Card */
   .dev-card {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.5)) !important;
-    border: 1px solid rgba(255, 255, 255, 0.05) !important;
-    border-left: 4px solid #3b82f6 !important;
-    border-radius: 10px !important;
-    padding: 16px !important;
+    background: #18181b !important;
+    border: 1px solid #27272a !important;
+    border-left: 3px solid #3b82f6 !important;
+    border-radius: 8px !important;
+    padding: 14px !important;
     margin-top: 20px !important;
-    text-align: center !important;
   }
 
-  /* Status Pulsing Animations */
+  /* Status Pulse Animations */
   @keyframes pulse {
-    0% {
-      transform: scale(0.9);
-      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
-    }
-    70% {
-      transform: scale(1);
-      box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
-    }
-    100% {
-      transform: scale(0.9);
-      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
-    }
+    0%   { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.6); }
+    70%  { box-shadow: 0 0 0 5px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
   }
   @keyframes pulse-offline {
-    0% {
-      transform: scale(0.9);
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-    }
-    70% {
-      transform: scale(1);
-      box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-    }
-    100% {
-      transform: scale(0.9);
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-    }
+    0%   { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6); }
+    70%  { box-shadow: 0 0 0 5px rgba(248, 113, 113, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0); }
   }
-  
   .status-indicator-online {
-    height: 8px;
-    width: 8px;
-    background-color: #10b981;
+    height: 7px; width: 7px;
+    background-color: #4ade80;
     border-radius: 50%;
     display: inline-block;
-    box-shadow: 0 0 8px #10b981;
     animation: pulse 2s infinite;
   }
-  
   .status-indicator-offline {
-    height: 8px;
-    width: 8px;
-    background-color: #ef4444;
+    height: 7px; width: 7px;
+    background-color: #f87171;
     border-radius: 50%;
     display: inline-block;
-    box-shadow: 0 0 8px #ef4444;
     animation: pulse-offline 2s infinite;
+  }
+
+  /* Full width container overrides */
+  #MainMenu {visibility: hidden;}
+  header {visibility: hidden;}
+  footer {visibility: hidden;}
+  .block-container {
+    padding-top: 0rem !important;
+    padding-left: 0rem !important;
+    padding-right: 0rem !important;
+    padding-bottom: 2rem !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+  .main .block-container {
+    max-width: 100% !important;
+  }
+
+  /* ── Mobile Responsive Overrides ── */
+  @media (max-width: 768px) {
+    /* Navbar mobile stacking */
+    .nav-mobile-wrap {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 10px !important;
+      padding: 12px 18px !important;
+    }
+    .nav-right-section {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      width: 100% !important;
+    }
+    .nav-links-row {
+      flex-wrap: wrap !important;
+      gap: 6px !important;
+    }
+    .nav-attribution {
+      display: none !important;
+    }
+
+    /* Hero section mobile */
+    .hero-section {
+      height: auto !important;
+      min-height: unset !important;
+      padding: 60px 18px 48px 18px !important;
+    }
+    .hero-title {
+      font-size: 28px !important;
+      letter-spacing: -0.5px !important;
+      padding: 0 !important;
+    }
+    .hero-desc {
+      font-size: 14.5px !important;
+      padding: 0 !important;
+    }
+    .hero-badges {
+      justify-content: flex-start !important;
+    }
+    .hero-badges span {
+      font-size: 11px !important;
+      padding: 5px 10px !important;
+    }
+
+    /* Tabs mobile scroll */
+    [data-baseweb="tab-list"] {
+      overflow-x: auto !important;
+      flex-wrap: nowrap !important;
+      -webkit-overflow-scrolling: touch !important;
+      scrollbar-width: none !important;
+    }
+    [data-baseweb="tab-list"]::-webkit-scrollbar {
+      display: none !important;
+    }
+    button[data-baseweb="tab"] {
+      flex-shrink: 0 !important;
+      font-size: 12px !important;
+      padding: 6px 12px !important;
+      white-space: nowrap !important;
+    }
+
+    /* Experiments page header padding */
+    .experiments-header {
+      padding: 24px 18px 18px 18px !important;
+    }
+    .experiments-content {
+      padding: 0 18px 36px 18px !important;
+    }
+    .experiments-header h1 {
+      font-size: 26px !important;
+    }
+
+    /* Cards on mobile: single column, full width */
+    .stHorizontalBlock {
+      flex-direction: column !important;
+    }
+    [data-testid="column"] {
+      width: 100% !important;
+      flex: none !important;
+      min-width: 100% !important;
+    }
+
+    /* Glass card mobile padding */
+    .glass-card {
+      padding: 16px !important;
+      margin-bottom: 10px !important;
+    }
+
+    /* Feature cards: adjust height auto */
+    .feat-card {
+      height: auto !important;
+      padding: 16px !important;
+    }
+
+    /* Metric grid wrap */
+    .metrics-grid {
+      flex-direction: column !important;
+    }
+
+    /* Buttons full width on mobile */
+    .stButton > button {
+      width: 100% !important;
+      padding: 10px 16px !important;
+      font-size: 13px !important;
+    }
+
+    /* Reduce heading sizes on mobile */
+    h1 { font-size: 1.7rem !important; }
+    h2 { font-size: 1.35rem !important; }
+    h3 { font-size: 1.1rem !important; }
+
+    /* Chat bubbles full width */
+    .chat-bubble {
+      max-width: 100% !important;
+    }
+
+    /* Formula blocks */
+    .formula-block {
+      font-size: 12px !important;
+      padding: 10px 12px !important;
+    }
+
+    /* CTA banner mobile */
+    .cta-banner {
+      padding: 24px 18px !important;
+    }
+
+    /* Active lab bar */
+    .active-lab-bar {
+      flex-direction: column !important;
+      gap: 8px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    html, body, [class*="css"] {
+      font-size: 14px !important;
+    }
+    .hero-title {
+      font-size: 24px !important;
+      line-height: 1.25 !important;
+    }
+    .hero-overline {
+      font-size: 10px !important;
+      letter-spacing: 0.8px !important;
+      padding: 4px 10px !important;
+    }
+    .stButton > button {
+      font-size: 12.5px !important;
+    }
+    button[data-baseweb="tab"] {
+      font-size: 11.5px !important;
+      padding: 5px 10px !important;
+    }
+    .nav-brand {
+      font-size: 16px !important;
+    }
+    .nav-badge {
+      display: none !important;
+    }
   }
 </style>
 """, unsafe_allow_html=True)
@@ -339,56 +476,46 @@ st.markdown("""
 def get_backend_root_url():
     return API_BASE_URL.replace("/api", "").rstrip("/")
 
+@st.cache_data(ttl=180, show_spinner=False)
 def check_backend_status():
     """
-    Pings backend root and returns status dict:
+    Pings backend root and returns status dict (cached for 3 minutes):
     'status': 'online' | 'waking_up' | 'offline'
     """
     root_url = get_backend_root_url()
     try:
-        r = requests.get(root_url, timeout=4)
+        r = requests.get(root_url, timeout=1.5)
         if r.status_code == 200:
             return {"status": "online", "data": r.json()}
     except requests.exceptions.Timeout:
-        return {"status": "waking_up", "message": "Render free-tier instance is spinning up (~30-50s)..."}
-    except requests.exceptions.ConnectionError:
+        return {"status": "waking_up", "message": "Render instance is spinning up..."}
+    except Exception:
         pass
-    except Exception as e:
-        print(f"Backend ping error: {e}")
     return {"status": "offline", "message": "Backend server is offline or unreachable."}
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def get_all_experiments(semester=None):
     try:
         params = {}
         if semester:
             params["semester"] = semester
-        r = requests.get(f"{API_BASE_URL}/experiments", params=params, timeout=15)
+        r = requests.get(f"{API_BASE_URL}/experiments", params=params, timeout=5)
         if r.status_code == 200:
             return r.json()
-        st.warning(f"Experiment catalog returned status {r.status_code}.")
         return []
-    except requests.exceptions.Timeout:
-        st.info("⏳ Backend is waking up. Loading experiments may take a few moments on cold start...")
-        return []
-    except Exception as e:
-        print(f"Failed to fetch experiments: {e}")
+    except Exception:
         return []
 
 
+@st.cache_data(ttl=600, show_spinner=False)
 def get_experiment_detail(exp_id):
     try:
-        r = requests.get(f"{API_BASE_URL}/experiments/{exp_id}", timeout=50)
+        r = requests.get(f"{API_BASE_URL}/experiments/{exp_id}", timeout=10)
         if r.status_code == 200:
             return r.json()
-        else:
-            st.error(f"Failed to fetch details for {exp_id}: Server returned status code {r.status_code}")
-            return None
-    except requests.exceptions.Timeout:
-        st.error(f"⏳ Request for experiment '{exp_id}' timed out. If the backend is still spinning up, please retry.")
         return None
-    except Exception as e:
-        st.error(f"Failed to fetch details for {exp_id}: {e}")
+    except Exception:
         return None
 
 
@@ -639,887 +766,676 @@ def draw_visjs_graph(nodes, edges):
     return html_code
 
 
+# ── Session State & Page Routing ─────────────────────────────────────────────
+if "active_exp_id" not in st.session_state:
+    st.session_state.active_exp_id = None
+    st.session_state.active_exp_title = None
+
+# Handle ?_launch=EXP_ID&_title=EXP_TITLE links from card buttons
+_launch_id = st.query_params.get("_launch", None)
+_launch_title = st.query_params.get("_title", None)
+if _launch_id and _launch_title:
+    st.session_state.active_exp_id = unquote(_launch_id)
+    st.session_state.active_exp_title = unquote(_launch_title)
+    # Clear launch params and stay on experiments page
+    st.query_params.clear()
+    st.rerun()
+
+# Handle ?_exit=true link to exit active workspace
+if st.query_params.get("_exit", None) == "true":
+    st.session_state.active_exp_id = None
+    st.session_state.active_exp_title = None
+    st.query_params.clear()
+    st.query_params["page"] = "experiments"
+    st.rerun()
+
+# Track current page via query parameters / session state
+query_page = st.query_params.get("page", "home")
+st.session_state.current_page = query_page
+
 # ── Render Page Top / Status ─────────────────────────────────────────────────
 backend_ok = check_backend_status()
+backend_status = backend_ok.get("status") if isinstance(backend_ok, dict) else ("online" if backend_ok else "offline")
 
-# ── Sidebar Branding ─────────────────────────────────────────────────────────
-with st.sidebar:
-    # 1. Custom CSS-based Brand Emblem & Title (Using the Logo asset if loaded)
-    if logo_square_html_src:
-        emblem_html = (
-            f'<div style="width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; '
-            f'overflow: hidden; border-radius: 8px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">'
-            f'<img src="{logo_square_html_src}" style="max-width: 100%; max-height: 100%; object-fit: contain; '
-            f'image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />'
-            f'</div>'
-        )
-    else:
-        emblem_html = (
-            f'<div style="background: linear-gradient(135deg, #2563eb, #7c3aed); width: 44px; height: 44px; '
-            f'border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 800; '
-            f'font-size: 20px; color: white; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35);">V</div>'
-        )
+if backend_status == "online":
+    status_badge = '<span class="status-indicator-online" style="margin-right:6px;"></span><span style="color:#4ade80;font-size:12px;font-weight:500;">Online</span>'
+elif backend_status == "waking_up":
+    status_badge = '<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:#fbbf24;margin-right:6px;"></span><span style="color:#fbbf24;font-size:12px;font-weight:500;">Waking Up</span>'
+else:
+    status_badge = '<span class="status-indicator-offline" style="margin-right:6px;"></span><span style="color:#f87171;font-size:12px;font-weight:500;">Offline</span>'
 
-    st.markdown(
-        f'<div style="display: flex; align-items: center; gap: 14px; margin-top: 15px; margin-bottom: 25px; '
-        f'background: rgba(15, 23, 42, 0.4); padding: 12px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.04);">'
-        f'{emblem_html}'
-        f'<div>'
-        f'<span style="font-size: 18px; font-weight: 800; color: #f8fafc; letter-spacing: 0.5px; line-height: 1.1; '
-        f'display: block; font-family: \'Outfit\', sans-serif;">VELIA</span>'
-        f'<span style="font-size: 8.5px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1.2px; '
-        f'font-weight: 600; display: block; margin-top: 2px;">Intelligence Assistant</span>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
-    
-    # 2. Pulsing Status Indicator Card
-    backend_status = backend_ok.get("status") if isinstance(backend_ok, dict) else ("online" if backend_ok else "offline")
-    
-    if backend_status == "online":
-        ai_info = backend_ok.get("data", {}).get("ai_status", {})
-        groq_on = ai_info.get("groq_configured", True)
-        gemini_on = ai_info.get("gemini_configured", True)
-        ai_badge = " (AI Ready)" if (groq_on or gemini_on) else " (Offline Fallback)"
-        st.markdown(f"""
-        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 8px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);">
-          <span class="status-indicator-online"></span>
-          <div>
-            <span style="color: #34d399; font-size: 12.5px; font-weight: 600; letter-spacing: 0.3px; display:block;">API Core Online{ai_badge}</span>
-            <span style="color: #6ee7b7; font-size: 9px; opacity: 0.8;">{get_backend_root_url()}</span>
-          </div>
-        </div>
-        """, unsafe_allow_html=True)
-    elif backend_status == "waking_up":
-        st.markdown(f"""
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 10px 14px; margin-bottom: 15px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span style="display:inline-block; width:10px; height:10px; border-radius:50%; background:#f59e0b; box-shadow:0 0 8px #f59e0b;"></span>
-            <span style="color: #fbbf24; font-size: 12.5px; font-weight: 600;">Server Waking Up (~45s)</span>
-          </div>
-          <p style="color: #fde68a; font-size: 10px; margin-top: 6px; margin-bottom: 0;">Free-tier instance is spinning up. First request takes ~50s.</p>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("🔄 Check Server Status", use_container_width=True):
-            st.rerun()
-    else:
-        st.markdown(f"""
-        <div style="background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 15px;">
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <span class="status-indicator-offline"></span>
-            <span style="color: #f87171; font-size: 12.5px; font-weight: 600; letter-spacing: 0.3px;">API Core Offline</span>
-          </div>
-          <span style="color: #fca5a5; font-size: 9.5px; display:block; margin-top:4px;">Target: {get_backend_root_url()}</span>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("🔄 Reconnect / Wake Server", use_container_width=True):
-            st.rerun()
-        
-    # Track selection in Session State
-    if "active_exp_id" not in st.session_state:
-        st.session_state.active_exp_id = None
-        st.session_state.active_exp_title = None
-
-    # Workspace status
-    if st.session_state.active_exp_id:
-        st.markdown(f"""
-        <div style="background: rgba(59, 130, 246, 0.04); border: 1px solid rgba(59, 130, 246, 0.1); border-radius: 8px; padding: 12px; margin-bottom: 20px;">
-            <span style="color: #94a3b8; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; display:block;">ACTIVE LAB WORKSPACE</span>
-            <div style="color: #f1f5f9; font-weight: 600; font-size: 13px; margin-top: 4px; margin-bottom: 10px; line-height: 1.4;">{st.session_state.active_exp_title}</div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Exit Lab Workspace", use_container_width=True, type="secondary"):
-            st.session_state.active_exp_id = None
-            st.session_state.active_exp_title = None
-            st.rerun()
-    else:
-        st.markdown("""
-        <div style="color: #94a3b8; font-size: 12px; line-height: 1.5; padding: 4px 6px; margin-bottom: 25px;">
-            Explore the ECE syllabus experiments on the homepage, then click <b>Launch Workspace</b> on any lab to begin simulations, diagnosis scans, and viva exams.
-        </div>
-        """, unsafe_allow_html=True)
-        
-    # Spacer instead of harsh divider line
-    st.markdown('<div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent); margin: 20px 0;"></div>', unsafe_allow_html=True)
-    
-    # 3. Developer Credit Card & System Environment Info (Merged and Redesigned)
-    dev_card_html = (
-        f'<div style="background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(30, 41, 59, 0.45)) !important; '
-        f'border: 1px solid rgba(255, 255, 255, 0.06) !important; border-top: 2px solid #8b5cf6 !important; '
-        f'border-radius: 12px !important; padding: 16px !important; margin-top: 20px !important; '
-        f'box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.8) !important; backdrop-filter: blur(10px) !important;">'
-        f'<div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; text-align: left;">'
-        f'<div style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); width: 36px; height: 36px; '
-        f'border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; '
-        f'font-size: 13px; color: #ffffff; box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); '
-        f'border: 1px solid rgba(255, 255, 255, 0.1);">SG</div>'
-        f'<div>'
-        f'<span style="color: #94a3b8; font-size: 8px; font-weight: 700; text-transform: uppercase; '
-        f'letter-spacing: 1px; display: block;">SYSTEM DEVELOPER</span>'
-        f'<span style="font-size: 14px; font-weight: 800; color: #f8fafc; display: block; '
-        f'font-family: \'Outfit\', sans-serif;">Sarbajit Ghosh</span>'
-        f'<span style="font-size: 10px; color: #a78bfa; font-weight: 500; display: block; margin-top: 1px;">Dept. of ECE, BIT Mesra</span>'
-        f'</div>'
-        f'</div>'
-        f'<div style="height: 1px; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent); margin: 10px 0;"></div>'
-        f'<div style="text-align: left;">'
-        f'<span style="color: #64748b; font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; display: block; margin-bottom: 3px;">SYSTEM ENVIRONMENT</span>'
-        f'<span style="color: #cbd5e1; font-size: 10.5px; line-height: 1.4; display: block; font-weight: 400;">'
-        f'Offline-capable local inference stack running through FastAPI orchestration layer.'
-        f'</span>'
-        f'</div>'
+# ── Top Navbar (Full Width Sticky Header) ────────────────────────────────────
+nav_active_html = ""
+if st.session_state.active_exp_id:
+    nav_active_html = (
+        f'<div style="display:flex;align-items:center;gap:10px;background:#18181b;border:1px solid #27272a;padding:5px 12px;border-radius:6px;">'
+        f'<span style="color:#71717a;font-size:11px;text-transform:uppercase;font-weight:600;letter-spacing:0.5px;">Active Lab:</span>'
+        f'<span style="color:#fafafa;font-size:13px;font-weight:600;">{st.session_state.active_exp_title}</span>'
         f'</div>'
     )
-    st.markdown(dev_card_html, unsafe_allow_html=True)
 
+is_home = st.session_state.current_page == "home"
+is_exp = st.session_state.current_page == "experiments"
+
+home_style = "color:#fafafa;background:#27272a;border-color:#3f3f46;" if is_home else "color:#a1a1aa;background:#18181b;border-color:#27272a;"
+exp_style = "color:#ffffff;background:#2563eb;border-color:#3b82f6;font-weight:600;" if is_exp else "color:#a1a1aa;background:#18181b;border-color:#27272a;"
+
+navbar_html = f"""<div class="nav-mobile-wrap" style="position:sticky;top:0;z-index:999;width:100%;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;padding:14px 36px;background:#09090b;border-bottom:1px solid #27272a;margin-bottom:0;">
+<div style="display:flex;align-items:center;gap:10px;">
+<a href="?page=home" target="_self" class="nav-brand" style="text-decoration:none;font-family:'Poppins',sans-serif;font-weight:700;font-size:18px;color:#fafafa;letter-spacing:-0.4px;">VELIA</a>
+<span class="nav-badge" style="font-family:'DM Sans',sans-serif;font-size:11px;color:#71717a;letter-spacing:0.5px;padding:2px 8px;background:#18181b;border:1px solid #27272a;border-radius:4px;font-weight:500;">ECE Lab Intelligence</span>
+<div style="display:flex;align-items:center;padding:2px 8px;background:#141415;border:1px solid #27272a;border-radius:20px;">{status_badge}</div>
+</div>
+<div class="nav-right-section" style="display:flex;align-items:center;gap:12px;">
+{nav_active_html}
+<div class="nav-links-row" style="display:flex;align-items:center;gap:8px;">
+<a href="?page=home" target="_self" style="font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;padding:5px 12px;border:1px solid;border-radius:6px;text-decoration:none;{home_style}">Home</a>
+<a href="?page=experiments" target="_self" style="font-family:'DM Sans',sans-serif;font-size:13px;padding:5px 14px;border:1px solid;border-radius:6px;text-decoration:none;{exp_style}">Experiments</a>
+<span class="nav-attribution" style="font-family:'DM Sans',sans-serif;font-size:12px;color:#71717a;padding-left:8px;border-left:1px solid #27272a;">Dept. of ECE · BIT Mesra</span>
+</div>
+</div>
+</div>"""
+
+st.markdown(navbar_html, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ── LANDING PAGE: PRODUCT SHOWCASE & CATALOG ─────────────────────────────────
+# ── LANDING / EXPERIMENTS ROUTING ────────────────────────────────────────────
 # ─────────────────────────────────────────────────────────────────────────────
 if not st.session_state.active_exp_id:
-    # ── 1. Hero Showcase Banner ──
-    logo_header_html = ""
-    if logo_html_src:
-        logo_header_html = (
-            f'<div style="margin: 0 auto 20px auto; width: 268px; display: flex; align-items: center; '
-            f'justify-content: center; filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.25));">'
-            f'<img src="{logo_html_src}" style="width: 100%; height: auto; object-fit: contain; '
-            f'image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;" />'
-            f'</div>'
-        )
-        
-    st.markdown(
-        f'<div style="position: relative; padding: 45px 24px; text-align: center; background: radial-gradient(circle, rgba(15,23,42,0.75) 0%, rgba(5,7,15,1) 100%); border-radius: 16px; border: 1px solid rgba(255,255,255,0.06); margin-bottom: 35px; overflow: hidden;">'
-        f'<div style="position: absolute; top: -50px; left: -50px; width: 220px; height: 220px; background: rgba(59,130,246,0.15); filter: blur(80px); border-radius: 50%;"></div>'
-        f'<div style="position: absolute; bottom: -50px; right: -50px; width: 250px; height: 250px; background: rgba(139,92,246,0.12); filter: blur(95px); border-radius: 50%;"></div>'
-        f'{logo_header_html}'
-        f'<h1 style="font-size: 40px; margin: 12px 0; font-weight: 800; letter-spacing: -0.5px; line-height: 1.2;"><span class="glow-text">VELIA — Vision-Enhanced Laboratory Intelligence Assistant</span></h1>'
-        f'<p style="font-size: 16px; color: #94a3b8; max-width: 820px; margin: 0 auto 30px auto; font-family: \'Inter\', sans-serif; font-weight: 300; line-height: 1.6;">An offline-capable AI virtual laboratory environment for Electronics & Communication Engineering. Integrates deep learning computer vision, graph neural networks, SPICE digital twins, and LLM-explainable diagnostics.<br><br><span style="color:#60a5fa; font-weight: 500; font-size:14px; letter-spacing:0.5px;">Developed by Sarbajit Ghosh (Department of ECE, BIT Mesra)</span></p>'
-        f'<div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;">'
-        f'<span style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #cbd5e1; font-weight: 500;">YOLOv8 Assembly Scan</span>'
-        f'<span style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #cbd5e1; font-weight: 500;">Graph Neural Networks</span>'
-        f'<span style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #cbd5e1; font-weight: 500;">Digital Twin Solver</span>'
-        f'<span style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); padding: 5px 12px; border-radius: 20px; font-size: 11px; color: #cbd5e1; font-weight: 500;">Adaptive LLM Examiner</span>'
-        f'</div>'
-        f'</div>',
-        unsafe_allow_html=True
-    )
-
-    # ── 2. Real-Time Platform Statistics (Clickable Dashboard) ──
-    st.markdown("### Platform Metrics & Benchmarks")
-    st.caption("Click on any button below to explore the detailed integration specifications.")
-    
-    if "selected_metric" not in st.session_state:
-        st.session_state.selected_metric = None
-        
-    col_stat1, col_stat2, col_stat3, col_stat4 = st.columns(4)
-    
-    with col_stat1:
-        is_selected = st.session_state.selected_metric == "curriculum"
-        border_color = "rgba(59, 130, 246, 0.5)" if is_selected else "rgba(255, 255, 255, 0.05)"
-        shadow_style = "box-shadow: 0 0 15px rgba(59, 130, 246, 0.2);" if is_selected else ""
-        st.markdown(f"""
-        <div style="background:rgba(17,24,39,0.5); border:1px solid {border_color}; border-radius:10px; padding:20px; text-align:center; transition:all 0.3s; {shadow_style}">
-            <span style="color:#94a3b8; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Curriculum Experiments</span><br>
-            <span style="font-size:32px; font-weight:800; color:#3b82f6;">80+</span>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Explore Curriculum", key="btn_curriculum", use_container_width=True, type="primary" if is_selected else "secondary"):
-            st.session_state.selected_metric = None if is_selected else "curriculum"
-            st.rerun()
-            
-    with col_stat2:
-        is_selected = st.session_state.selected_metric == "models"
-        border_color = "rgba(16, 185, 129, 0.5)" if is_selected else "rgba(255, 255, 255, 0.05)"
-        shadow_style = "box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);" if is_selected else ""
-        st.markdown(f"""
-        <div style="background:rgba(17,24,39,0.5); border:1px solid {border_color}; border-radius:10px; padding:20px; text-align:center; transition:all 0.3s; {shadow_style}">
-            <span style="color:#94a3b8; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">AI Models Stack</span><br>
-            <span style="font-size:32px; font-weight:800; color:#10b981;">4</span>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Explore AI Models", key="btn_models", use_container_width=True, type="primary" if is_selected else "secondary"):
-            st.session_state.selected_metric = None if is_selected else "models"
-            st.rerun()
-            
-    with col_stat3:
-        is_selected = st.session_state.selected_metric == "faults"
-        border_color = "rgba(245, 158, 11, 0.5)" if is_selected else "rgba(255, 255, 255, 0.05)"
-        shadow_style = "box-shadow: 0 0 15px rgba(245, 158, 11, 0.2);" if is_selected else ""
-        st.markdown(f"""
-        <div style="background:rgba(17,24,39,0.5); border:1px solid {border_color}; border-radius:10px; padding:20px; text-align:center; transition:all 0.3s; {shadow_style}">
-            <span style="color:#94a3b8; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Fault Biasing Isolated</span><br>
-            <span style="font-size:32px; font-weight:800; color:#f59e0b;">8</span>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Explore Fault Classes", key="btn_faults", use_container_width=True, type="primary" if is_selected else "secondary"):
-            st.session_state.selected_metric = None if is_selected else "faults"
-            st.rerun()
-            
-    with col_stat4:
-        is_selected = st.session_state.selected_metric == "knowledge"
-        border_color = "rgba(167, 139, 250, 0.5)" if is_selected else "rgba(255, 255, 255, 0.05)"
-        shadow_style = "box-shadow: 0 0 15px rgba(167, 139, 250, 0.2);" if is_selected else ""
-        st.markdown(f"""
-        <div style="background:rgba(17,24,39,0.5); border:1px solid {border_color}; border-radius:10px; padding:20px; text-align:center; transition:all 0.3s; {shadow_style}">
-            <span style="color:#94a3b8; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Knowledge Concepts</span><br>
-            <span style="font-size:32px; font-weight:800; color:#a78bfa;">25 Nodes</span>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Explore Concept Maps", key="btn_knowledge", use_container_width=True, type="primary" if is_selected else "secondary"):
-            st.session_state.selected_metric = None if is_selected else "knowledge"
-            st.rerun()
-            
-    # Render Details block based on selection
-    if st.session_state.selected_metric == "curriculum":
-        st.markdown("""
-        <div class="glass-card" style="border-left: 4px solid #3b82f6 !important; background: rgba(30, 41, 59, 0.4) !important; margin-top:20px;">
-            <h4 style="color:#60a5fa; margin-top:0;">Curriculum Experiments Coverage</h4>
-            <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom: 20px;">
-                VELIA covers a wide array of laboratory experiments across semesters. These virtual labs provide SPICE simulation digital twins, automated verification, and hardware diagnostics.
-            </p>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#60a5fa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Semester I & III</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Basic Electronics & Networks</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Diodes, Zeners, Rectifiers, and basic CRO measurements are covered.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#60a5fa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Semester IV & V</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Analog Circuits & ICs</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">BJT Amplifiers, Op-Amp configurations, filters, and oscillators.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#60a5fa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Semester VI</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Digital Communications</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">AM/FM Modulator, Phase Shift Keying, and signal sampling rates.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#60a5fa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Semester VII</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Microprocessors & IoT</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">I2C Communication, Embedded EEPROM read/writes, ADC/DAC modules.</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Close Details", key="close_curriculum", use_container_width=True):
-            st.session_state.selected_metric = None
-            st.rerun()
-            
-    elif st.session_state.selected_metric == "models":
-        st.markdown("""
-        <div class="glass-card" style="border-left: 4px solid #10b981 !important; background: rgba(30, 41, 59, 0.4) !important; margin-top:20px;">
-            <h4 style="color:#34d399; margin-top:0;">VELIA Artificial Intelligence Stack</h4>
-            <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom: 20px;">
-                Our hybrid intelligence pipeline integrates four modern machine learning models and computer vision pipelines to analyze, verify, and explain circuits.
-            </p>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#10b981; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">1. Bounding-Box Detection</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">YOLOv8 CV Engine</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Identifies resistor values, diode orientation, IC pins, and breadboard row contacts.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#10b981; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">2. Topology Analysis</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">PyTorch Graph Neural Network</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Processes adjacency matrices to isolate circuit mismatches and wiring anomalies.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#10b981; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">3. Waveform Parser</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">OpenCV HSV Trace Masking</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Processes screen coordinates and traces signals to measure Vp-p, frequency, and clipping.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#10b981; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">4. Explanation & Tutoring</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">RAG & Fine-Tuned Local LLM</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Retrieves lab documentation to provide structured debugging fixes and conduct viva exams.</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Close Details", key="close_models", use_container_width=True):
-            st.session_state.selected_metric = None
-            st.rerun()
-            
-    elif st.session_state.selected_metric == "faults":
-        st.markdown("""
-        <div class="glass-card" style="border-left: 4px solid #f59e0b !important; background: rgba(30, 41, 59, 0.4) !important; margin-top:20px;">
-            <h4 style="color:#fbbf24; margin-top:0;">Isolated Circuit Fault Categories</h4>
-            <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom: 20px;">
-                Our diagnostic estimators isolate deviations in biasing, wiring, digital logic, and communication signals across eight comprehensive ECE fault classes to support all 80+ curriculum experiments.
-            </p>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 15px;">
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">1. Device Biasing & Parameters</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Active Biasing States</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Cutoff/saturation in active devices (BJTs, FETs) and out-of-tolerance passive parameters.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">2. Signal Quality & Distortion</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Waveform & RF Integrity</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Identifies signal clipping, saturation distortion, phase errors, and high-frequency bandwidth rolloff.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">3. Assembly & Continuity</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Breadboard Connections</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Flags open circuit paths, shorted net loops, missing components, and row contact misalignments.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">4. Polarities & Structural Mismatch</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Orientation Mismatches</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Flags reversed diodes, reversed electrolytic capacitors, incorrect IC directions, or swapped terminal pins.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">5. Feedback Loops</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Op-Amp Loop Failures</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Detects open feedback paths (saturation), positive feedback latching, and impedance loading.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">6. Digital Logic & States</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Gate & Delay Violations</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Isolates stuck-at-0/stuck-at-1 pins, floating logic inputs, race conditions, and clock skew.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">7. Modulation & Channels</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Modulated Signal Integrity</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Identifies AM overmodulation, FM frequency scale offsets, carrier leakage, and inter-symbol interference.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255, 255, 255, 0.03);">
-                    <span style="color:#fbbf24; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">8. Embedded Protocols & Buses</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Protocol & Bus Contention</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Diagnoses I2C/SPI swapped lines, missing pull-ups, slave address mismatches, and baud rate scale issues.</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Close Details", key="close_faults", use_container_width=True):
-            st.session_state.selected_metric = None
-            st.rerun()
-            
-    elif st.session_state.selected_metric == "knowledge":
-        st.markdown("""
-        <div class="glass-card" style="border-left: 4px solid #a78bfa !important; background: rgba(30, 41, 59, 0.4) !important; margin-top:20px;">
-            <h4 style="color:#c084fc; margin-top:0;">Conceptual Knowledge Graph Mappings</h4>
-            <p style="font-size:13.5px; color:#cbd5e1; line-height:1.6; margin-bottom: 20px;">
-                Our interactive Knowledge Graph maps prerequisite pathways and conceptual nodes to form a syllabus blueprint.
-            </p>
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#a78bfa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Prerequisite Tracking</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Dependency Maps</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Enforces step-by-step progress, ensuring students review prerequisite diode physics before launching Zener labs.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#a78bfa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Dynamic Skill Profiles</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Student Mastery Log</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Updates concept scores (CRO, diode, BJT, op-amp) based on adaptive viva answers.</span>
-                </div>
-                <div style="background:rgba(9, 13, 22, 0.6); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.03);">
-                    <span style="color:#a78bfa; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Adaptive Pathway Finder</span>
-                    <div style="color:#f1f5f9; font-weight:600; font-size:14px; margin-top:4px; margin-bottom:6px;">Personal learning pathways</div>
-                    <span style="color:#94a3b8; font-size:11.5px; line-height:1.4; display:block;">Suggests revision items and study paths for weak nodes mapped directly from the knowledge network.</span>
-                </div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-        if st.button("Close Details", key="close_knowledge", use_container_width=True):
-            st.session_state.selected_metric = None
-            st.rerun()
-
-    st.divider()
-
-    # ── 3. Platform Capabilities Deck ──
-    st.markdown("### Core AI Platform Capabilities")
-    
-    col_c1, col_c2, col_c3, col_c4 = st.columns(4)
-    with col_c1:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#60a5fa; margin-bottom:8px;">Fault Diagnosis</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Hybrid logic checking against Random Forest and Deep MLP fault estimators to diagnose cutoff, saturation, and droop.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c2:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#10b981; margin-bottom:8px;">Computer Vision</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Scans breadboard wiring rows and matches component connectivity matrices using YOLOv8 bounding boxes.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c3:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#f59e0b; margin-bottom:8px;">Waveform Analyzer</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Applies OpenCV HSV filter masking to trace CRO screenshot signals and isolate clipping distortion.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c4:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#a78bfa; margin-bottom:8px;">Digital Twin</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Simulates real-time electrical output voltages, Bode plots, and load lines matching SPICE formulations.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-    st.markdown("<br>", unsafe_allow_html=True)
-    col_c5, col_c6, col_c7, col_c8 = st.columns(4)
-    with col_c5:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#f43f5e; margin-bottom:8px;">Adaptive Viva</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Tutors students using a conversational grading interface, adapting difficulty and updating skill charts.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c6:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#06b6d4; margin-bottom:8px;">Knowledge Graph</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Maps prerequisite conceptual paths visually across semesters using interactive Vis.js node structures.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c7:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#ec4899; margin-bottom:8px;">LLM XAI Reasoning</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Synthesizes qualitative engineering justifications for diagnosed circuit faults from physical principles.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col_c8:
-        st.markdown("""
-        <div class="feat-card">
-            <h5 style="color:#34d399; margin-bottom:8px;">CAD Exporter</h5>
-            <p style="font-size:12px; color:#94a3b8; line-height:1.5; margin:0;">
-                Synthesizes LTspice schematic (.asc), KiCad netlists, and Circuitikz LaTeX schematics for physical verification.
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.divider()
-
-    # ── 4. Semester-Wise Lab Curriculum Selection Cards ──
-    st.markdown("### Semester-Wise Laboratory Curriculum")
-    
-    sem_keys = ["Semester I", "Semester III", "Semester IV", "Semester V", "Semester VI", "Semester VII"]
-    tabs = st.tabs(sem_keys)
-    
-    db_exps = get_all_experiments()
-    
-    for tab, sem_key in zip(tabs, sem_keys):
-        with tab:
-            courses = ECE_SYLLABUS.get(sem_key, {})
-            if not courses:
-                st.info("No courses cataloged for this semester.")
-            else:
-                for course_code, course_data in courses.items():
-                    st.markdown(f"#### {course_code} — {course_data['name']}")
-                    
-                    for exp_idx, exp in enumerate(course_data["experiments"], 1):
-                        # Find matching active experiment in database
-                        matched_db = find_matching_db_exp(exp, db_exps)
-                        
-                        is_active = True
-                        status_badge = '<span class="badge badge-easy" style="background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid rgba(59,130,246,0.25);">AI Lab Active</span>'
-                        diff_color = "badge-easy" if exp["difficulty"] == "Easy" else ("badge-medium" if exp["difficulty"] == "Medium" else "badge-hard")
-                        diff_badge = f'<span class="badge {diff_color}">{exp["difficulty"]}</span>'
-                        
-                        st.markdown(f"""
-                        <div class="glass-card" style="margin-bottom: 12px; padding: 18px !important;">
-                            <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;">
-                                <div>
-                                    {diff_badge}
-                                    {status_badge}
-                                    <h5 style="color:#f1f5f9; margin:8px 0; font-size:16px;">{exp['title']}</h5>
-                                    <p style="color:#cbd5e1; font-size:12px; margin:0 0 6px 0; line-height:1.4;"><b>Aim:</b> {exp.get('aim', '')}</p>
-                                    <p style="color:#94a3b8; font-size:11px; margin:0;">Components: {", ".join(exp.get("components", ["Standard Bench Equipment"]))}</p>
-                                </div>
-                                <div style="text-align:right; font-size:11px; color:#cbd5e1; font-family:monospace; margin-top:4px;">
-                                    Duration: {exp['time']}
-                                </div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
-                        
-                        if st.button(f"Launch AI Intelligent Workspace ({exp['title'][:30]}...)", key=f"launch_{exp['title']}", use_container_width=True, type="primary"):
-                            if matched_db:
-                                st.session_state.active_exp_id = matched_db['id']
-                                st.session_state.active_exp_title = matched_db['title']
-                            else:
-                                sem_num = sem_key.split()[-1]
-                                roman_map = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8}
-                                sem_digit = roman_map.get(sem_num, 1)
-                                st.session_state.active_exp_id = f"sem{sem_digit}_{course_code}_exp{exp_idx}"
-                                st.session_state.active_exp_title = exp['title']
-                            st.rerun()
-                    st.markdown("<br>", unsafe_allow_html=True)
-
-    st.divider()
-
-    # ── 5. Technical Pipeline & Architecture Section ──
-    st.markdown("### System Architecture & AI Pipeline Showcase")
-    st.caption("Click on any node in the architecture diagram to examine the model specifications, mathematical representation, and RAG data pipelines.")
-    
-    showcase_html = """
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    body {
-      background-color: transparent;
-      color: #cbd5e1;
-      font-family: 'Inter', sans-serif;
-      overflow: hidden;
-      padding: 5px;
-    }
-    .architecture-showcase {
-      display: grid;
-      grid-template-columns: 1.35fr 1fr;
-      gap: 20px;
-      width: 100%;
-      height: 380px;
-    }
-    @media (max-width: 768px) {
-      .architecture-showcase {
-        grid-template-columns: 1fr;
-        height: auto;
-        overflow-y: auto;
-      }
-    }
-    .grid-container {
-      display: grid;
-      grid-template-columns: 1fr 30px 1fr 30px 1fr;
-      grid-template-rows: 75px 30px 75px 30px 75px;
-      gap: 5px;
-      align-items: center;
-      background: rgba(15, 23, 42, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 12px;
-      padding: 15px;
-    }
-    .pipeline-node {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 8px;
-      padding: 10px 8px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      user-select: none;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .pipeline-node:hover {
-      transform: translateY(-2px);
-      border-color: rgba(139, 92, 246, 0.3);
-      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.1);
-    }
-    
-    #node-photo { grid-row: 1; grid-column: 1; }
-    #arrow-1 { grid-row: 1; grid-column: 2; }
-    #node-yolo { grid-row: 1; grid-column: 3; }
-    #arrow-2 { grid-row: 1; grid-column: 4; }
-    #node-pins { grid-row: 1; grid-column: 5; }
-
-    #arrow-3 { grid-row: 2; grid-column: 5; }
-
-    #node-matrix { grid-row: 3; grid-column: 5; }
-    #arrow-4 { grid-row: 3; grid-column: 4; }
-    #node-networkx { grid-row: 3; grid-column: 3; }
-    #arrow-5 { grid-row: 3; grid-column: 2; }
-    #node-gnn { grid-row: 3; grid-column: 1; }
-
-    #arrow-6 { grid-row: 4; grid-column: 1; }
-
-    #node-fault { grid-row: 5; grid-column: 1; }
-    #arrow-7 { grid-row: 5; grid-column: 2; }
-    #node-faiss { grid-row: 5; grid-column: 3; }
-    #arrow-8 { grid-row: 5; grid-column: 4; }
-    #node-llm { grid-row: 5; grid-column: 5; }
-
-    .pipeline-arrow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #475569;
-      font-weight: bold;
-    }
-    .vertical-arrow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-      color: #475569;
-      font-weight: bold;
-      height: 100%;
-    }
-    
-    .node-number {
-      font-family: 'Outfit', sans-serif;
-      font-size: 9px;
-      font-weight: 800;
-      color: #64748b;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 2px;
-    }
-    .node-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 11px;
-      font-weight: 700;
-      color: #f1f5f9;
-      line-height: 1.2;
-    }
-    .node-type {
-      font-size: 8px;
-      color: #94a3b8;
-      margin-top: 3px;
-    }
-    
-    /* Phase specific active colors */
-    #node-photo.active, #node-yolo.active, #node-pins.active {
-      border-color: #3b82f6 !important;
-      background: rgba(37, 99, 235, 0.1) !important;
-      box-shadow: 0 0 15px rgba(59, 130, 246, 0.2) !important;
-    }
-    #node-matrix.active, #node-networkx.active, #node-gnn.active {
-      border-color: #8b5cf6 !important;
-      background: rgba(124, 58, 237, 0.1) !important;
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.2) !important;
-    }
-    #node-fault.active, #node-faiss.active, #node-llm.active {
-      border-color: #fbbf24 !important;
-      background: rgba(245, 158, 11, 0.1) !important;
-      box-shadow: 0 0 15px rgba(251, 191, 36, 0.2) !important;
-    }
-
-    .detail-panel {
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(12px);
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      transition: all 0.3s ease;
-    }
-    .detail-phase {
-      font-size: 9px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.2px;
-      color: #a78bfa;
-      margin-bottom: 6px;
-    }
-    .detail-title {
-      font-family: 'Outfit', sans-serif;
-      font-size: 18px;
-      font-weight: 800;
-      color: #f8fafc;
-      margin: 0 0 8px 0;
-    }
-    .detail-tech {
-      display: inline-block;
-      align-self: flex-start;
-      padding: 4px 10px;
-      border-radius: 6px;
-      background: rgba(59, 130, 246, 0.08);
-      border: 1px solid rgba(59, 130, 246, 0.15);
-      font-family: monospace;
-      font-size: 9.5px;
-      color: #60a5fa;
-      margin-bottom: 12px;
-    }
-    .detail-desc {
-      font-size: 12px;
-      color: #cbd5e1;
-      line-height: 1.6;
-      margin: 0;
-    }
-  </style>
-</head>
-<body>
-
-<div class="architecture-showcase">
-  <div class="grid-container">
-    <div class="pipeline-node" onclick="selectNode('photo')" id="node-photo">
-      <div class="node-number">01</div>
-      <div class="node-title">Breadboard Photo</div>
-      <div class="node-type">Input Image</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-1">→</div>
-    <div class="pipeline-node" onclick="selectNode('yolo')" id="node-yolo">
-      <div class="node-number">02</div>
-      <div class="node-title">YOLOv8 Detector</div>
-      <div class="node-type">CV Model</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-2">→</div>
-    <div class="pipeline-node" onclick="selectNode('pins')" id="node-pins">
-      <div class="node-number">03</div>
-      <div class="node-title">Pin Coordinates</div>
-      <div class="node-type">Geometric Extract</div>
-    </div>
-
-    <div class="vertical-arrow" id="arrow-3">↓</div>
-
-    <div class="pipeline-node" onclick="selectNode('gnn')" id="node-gnn">
-      <div class="node-number">06</div>
-      <div class="node-title">GNN Verify</div>
-      <div class="node-type">PyTorch GNN</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-5">←</div>
-    <div class="pipeline-node" onclick="selectNode('networkx')" id="node-networkx">
-      <div class="node-number">05</div>
-      <div class="node-title">NetworkX Graph</div>
-      <div class="node-type">Graph Model</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-4">←</div>
-    <div class="pipeline-node" onclick="selectNode('matrix')" id="node-matrix">
-      <div class="node-number">04</div>
-      <div class="node-title">Adjacency Matrix</div>
-      <div class="node-type">Representation</div>
-    </div>
-
-    <div class="vertical-arrow" id="arrow-6">↓</div>
-
-    <div class="pipeline-node" onclick="selectNode('fault')" id="node-fault">
-      <div class="node-number">07</div>
-      <div class="node-title">Fault Prediction</div>
-      <div class="node-type">MLP/RF Classifier</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-7">→</div>
-    <div class="pipeline-node" onclick="selectNode('faiss')" id="node-faiss">
-      <div class="node-number">08</div>
-      <div class="node-title">FAISS Vector DB</div>
-      <div class="node-type">Offline RAG</div>
-    </div>
-    <div class="pipeline-arrow" id="arrow-8">→</div>
-    <div class="pipeline-node" onclick="selectNode('llm')" id="node-llm">
-      <div class="node-number">09</div>
-      <div class="node-title">Explainable AI LLM</div>
-      <div class="node-type">Local Inference</div>
-    </div>
-  </div>
-
-  <div class="detail-panel">
-    <div class="detail-phase" id="detail-phase">Phase 1: Input Perception</div>
-    <h4 class="detail-title" id="detail-title">Breadboard Photograph</h4>
-    <div class="detail-tech" id="detail-tech">JPEG/PNG Input · OpenCV Preprocessing</div>
-    <p class="detail-desc" id="detail-desc">
-      Captures the high-resolution physical breadboard assembly details under varying lab lighting. OpenCV corrects perspective skew and runs bilateral filter smoothing to prepare for neural feature extraction.
-    </p>
-  </div>
+    # ── ROUTE 1: HOME PAGE ───────────────────────────────────────────────────
+    if st.session_state.current_page == "home":
+        # ── 1. Hero Section — Full Viewport Height & Refined Typography ──
+        hero_html = """<div class="hero-section" style="height:calc(100vh - 68px);min-height:calc(100vh - 68px);width:100%;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:30px 24px;background:#09090b;border-bottom:1px solid #27272a;margin-bottom:40px;">
+<div style="margin-bottom:20px;">
+<span class="hero-overline" style="font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;color:#60a5fa;text-transform:uppercase;letter-spacing:1.5px;padding:5px 14px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.2);border-radius:20px;">Developed by Sarbajit Ghosh · Dept. of ECE, BIT Mesra</span>
 </div>
+<h1 class="hero-title" style="font-family:'Poppins',sans-serif;font-size:clamp(28px, 4.4vw, 58px);font-weight:700;color:#fafafa;letter-spacing:-1.2px;line-height:1.2;margin:0 auto 18px auto;max-width:880px;padding:0 12px;">VELIA — Vision-Enhanced<br>Laboratory Intelligence Assistant</h1>
+<p class="hero-desc" style="font-family:'DM Sans',sans-serif;font-size:clamp(14px, 1.4vw, 18.5px);color:#a1a1aa;max-width:680px;margin:0 auto 32px auto;font-weight:400;line-height:1.65;padding:0 12px;">An offline-capable AI virtual laboratory environment for Electronics &amp; Communication Engineering. Breadboard CV scanning, GNN topology verification, digital twin simulation &amp; adaptive viva.</p>
+<div style="display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:32px;">
+<a href="?page=experiments" target="_self" style="font-family:'DM Sans',sans-serif;background:#2563eb;color:#ffffff;padding:10px 24px;border-radius:6px;font-size:14px;font-weight:600;text-decoration:none;display:inline-block;transition:background 0.15s;">Explore Experiments →</a>
+<a href="#metrics" style="font-family:'DM Sans',sans-serif;background:#18181b;color:#a1a1aa;border:1px solid #27272a;padding:10px 20px;border-radius:6px;font-size:14px;font-weight:500;text-decoration:none;display:inline-block;">Platform Overview ↓</a>
+</div>
+<div class="hero-badges" style="display:flex;justify-content:center;gap:8px;flex-wrap:wrap;">
+<span style="font-family:'DM Sans',sans-serif;background:#18181b;border:1px solid #27272a;padding:6px 14px;border-radius:6px;font-size:12.5px;color:#71717a;font-weight:500;">YOLOv8 Vision Scan</span>
+<span style="font-family:'DM Sans',sans-serif;background:#18181b;border:1px solid #27272a;padding:6px 14px;border-radius:6px;font-size:12.5px;color:#71717a;font-weight:500;">PyTorch GNN</span>
+<span style="font-family:'DM Sans',sans-serif;background:#18181b;border:1px solid #27272a;padding:6px 14px;border-radius:6px;font-size:12.5px;color:#71717a;font-weight:500;">Digital Twin</span>
+<span style="font-family:'DM Sans',sans-serif;background:#18181b;border:1px solid #27272a;padding:6px 14px;border-radius:6px;font-size:12.5px;color:#71717a;font-weight:500;">LLM Viva Examiner</span>
+<span style="font-family:'DM Sans',sans-serif;background:#18181b;border:1px solid #27272a;padding:6px 14px;border-radius:6px;font-size:12.5px;color:#71717a;font-weight:500;">RAG Assistant</span>
+</div>
+</div>"""
+        st.markdown(hero_html, unsafe_allow_html=True)
 
-<script>
-const details = {
-  photo: {
-    title: "Breadboard Photograph",
-    phase: "Phase 1: Input Perception",
-    tech: "JPEG/PNG Input · OpenCV Preprocessing",
-    desc: "Captures high-resolution physical breadboard assembly details under varying lab lighting conditions. OpenCV corrects perspective skew and applies bilateral filter smoothing to optimize component edge definition."
-  },
-  yolo: {
-    title: "YOLOv8 Component Detection",
-    phase: "Phase 1: Computer Vision Scan",
-    tech: "PyTorch · Ultralytics YOLOv8 · Custom Weights",
-    desc: "Performs bounding-box inference to identify physical resistors, diodes, transistors, IC packages, and jumper endpoints. Yields component labels and bounding centroid coordinates."
-  },
-  pins: {
-    title: "Pin Coordinates Extraction",
-    phase: "Phase 1: Geometric Grid Mapping",
-    tech: "Coordinate Transforms · Geometric Intersections",
-    desc: "Translates bounding-box centroid coordinates into physical breadboard grid coordinates, identifying which breadboard row and column contacts hold the component leads."
-  },
-  matrix: {
-    title: "Adjacency Matrix",
-    phase: "Phase 2: Mathematical Representation",
-    tech: "NumPy Matrix Arrays",
-    desc: "Constructs an N x N connectivity representation where rows and columns denote individual component terminals. Non-zero values define shared nodes and electrical continuity paths."
-  },
-  networkx: {
-    title: "NetworkX Graph Reconstruction",
-    phase: "Phase 2: Topological Reconstruction",
-    tech: "NetworkX Structure Modeling",
-    desc: "Builds a mathematical graph twin of the physical circuit, standardizing components as edges and breadboard rail rows as vertices, enabling structural node analysis."
-  },
-  gnn: {
-    title: "GNN Topology Verify",
-    phase: "Phase 2: Graph Convolutional Network",
-    tech: "PyTorch Geometric · GCN Classifier",
-    desc: "An offline Graph Convolutional Network verifies if the physical topology matches the reference schematic. Detects missing components, polarity reversals, and open loop faults."
-  },
-  fault: {
-    title: "Fault Prediction",
-    phase: "Phase 3: Diagnostic Estimators",
-    tech: "Scikit-Learn Random Forest · PyTorch MLP",
-    desc: "Classifies operational circuit faults (cutoff biasing, saturation distortion, parameter out-of-tolerance) by evaluating numerical voltages and gain readings."
-  },
-  faiss: {
-    title: "FAISS Vector DB",
-    phase: "Phase 3: Offline RAG Retrieval",
-    tech: "FAISS Index · SentenceTransformers",
-    desc: "Pipes user queries to an offline vector index containing laboratory manuals, curriculum guidelines, and theory summaries to retrieve relevant context with low latency."
-  },
-  llm: {
-    title: "Explainable AI (XAI) LLM",
-    phase: "Phase 3: Natural Language Reasoning",
-    tech: "Local LLaMA/Mistral · HuggingFace Transformers",
-    desc: "Synthesizes mathematical diagnostics and retrieved RAG context to output natural, human-readable troubleshooting fixes and viva explanations. Runs fully offline."
-  }
-};
+        # ── 2. Real-Time Platform Statistics (Interactive Spotlight Carousel) ──
+        st.markdown("""
+        <style>
+        .home-section-wrap {
+            padding: 0 52px 64px 52px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 768px) {
+            .home-section-wrap {
+                padding: 0 18px 48px 18px !important;
+            }
+        }
+        /* Spotlight Card */
+        .spotlight-card {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 14px;
+            padding: 32px 36px;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 32px;
+            align-items: center;
+            transition: border-color 0.25s ease;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.25);
+            margin-bottom: 20px;
+        }
+        @media (max-width: 768px) {
+            .spotlight-card {
+                grid-template-columns: 1fr;
+                gap: 16px;
+                padding: 24px 20px;
+            }
+        }
+        .spotlight-stat-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            background: #111113;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+        }
+        .spotlight-stat-num {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(38px, 4vw, 52px);
+            font-weight: 800;
+            color: #fafafa;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+        .spotlight-stat-label {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #71717a;
+        }
+        .spotlight-info {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .spotlight-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .spotlight-pill {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #60a5fa;
+            background: rgba(59,130,246,0.08);
+            border: 1px solid rgba(59,130,246,0.25);
+            padding: 3px 10px;
+            border-radius: 20px;
+        }
+        .spotlight-index {
+            font-family: 'DM Mono', monospace;
+            font-size: 11px;
+            color: #52525b;
+            font-weight: 600;
+        }
+        .spotlight-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: clamp(17px, 2vw, 22px);
+            font-weight: 700;
+            color: #fafafa;
+            margin: 0;
+            line-height: 1.3;
+        }
+        .spotlight-desc {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13.5px;
+            color: #a1a1aa;
+            line-height: 1.6;
+            margin: 0;
+        }
+        .spotlight-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 2px;
+        }
+        .spotlight-tag-item {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11.5px;
+            color: #71717a;
+            background: #111113;
+            border: 1px solid #27272a;
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+        /* Thumbnail Cards Row */
+        .carousel-selector-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+        @media (max-width: 768px) {
+            .carousel-selector-row {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 8px;
+            }
+        }
+        .carousel-thumb-card {
+            background: #141416;
+            border: 1px solid #27272a;
+            border-radius: 8px;
+            padding: 12px 16px;
+            text-align: left;
+            transition: all 0.15s ease;
+            cursor: pointer;
+        }
+        .carousel-thumb-card:hover {
+            border-color: #3b82f6;
+            background: #18181b;
+        }
+        .carousel-thumb-card.active {
+            background: #1e1e24;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 1px rgba(59,130,246,0.3);
+        }
+        </style>
+        <div class="home-section-wrap" id="metrics">
+            <div style="margin-bottom: 24px;">
+                <h2 style="font-family:'Poppins',sans-serif; font-size:clamp(20px, 2.5vw, 24px); font-weight:700; color:#fafafa; margin:0 0 6px 0; letter-spacing:-0.5px;">Platform Metrics &amp; Benchmarks</h2>
+                <p style="font-family:'DM Sans',sans-serif; font-size:13.5px; color:#71717a; margin:0;">Explore verified curriculum nodes, machine learning stacks, diagnostic estimators, and knowledge maps.</p>
+            </div>
+        """, unsafe_allow_html=True)
 
-function selectNode(id) {
-  document.querySelectorAll('.pipeline-node').forEach(node => {
-    node.classList.remove('active');
-  });
-  
-  const activeNode = document.getElementById('node-' + id);
-  if (activeNode) activeNode.classList.add('active');
-  
-  const data = details[id];
-  if (data) {
-    document.getElementById('detail-title').innerText = data.title;
-    document.getElementById('detail-phase').innerText = data.phase;
-    document.getElementById('detail-tech').innerText = data.tech;
-    document.getElementById('detail-desc').innerText = data.desc;
-  }
-}
+        METRIC_SLIDES = [
+            {
+                "stat": "80+",
+                "stat_label": "Experiments",
+                "tag": "Curriculum Coverage",
+                "title": "Comprehensive ECE Laboratory Syllabus",
+                "desc": "Full digital curriculum coverage across Semesters I through VIII at BIT Mesra, including Basic Electronics, Analog Circuits, Digital ICs, VLSI, DSP, and Microcontrollers.",
+                "badges": ["8 Semesters Cataloged", "10+ Laboratory Courses", "Hardware Component Inventories"],
+                "cta_text": "Explore Experiments Catalog →",
+                "cta_link": "?page=experiments"
+            },
+            {
+                "stat": "4",
+                "stat_label": "AI Models",
+                "tag": "Neural Network Stack",
+                "title": "Multi-Modal Machine Learning & Vision Architecture",
+                "desc": "YOLOv8 nano for breadboard pin-level component bounding boxes, PyTorch GNN for schematic graph validation, Random Forest/MLP for circuit fault prediction, and FAISS vector RAG.",
+                "badges": ["YOLOv8 Object Detection", "PyTorch Geometric GNN", "FAISS RAG Vector Store"],
+                "cta_text": "View Experiments →",
+                "cta_link": "?page=experiments"
+            },
+            {
+                "stat": "8",
+                "stat_label": "Fault Classes",
+                "tag": "Automated Diagnostics",
+                "title": "Real-Time Circuit Fault Detection & Root-Cause Biasing",
+                "desc": "Automated diagnostic logic checking against Random Forest and Deep MLP estimators to detect cutoff biasing, saturation, thermal runaway, open collector, and power rail droop.",
+                "badges": ["Cutoff / Saturation Detection", "BJT Q-Point Drift", "Thermal & Rail Droop Diagnostics"],
+                "cta_text": "Launch Laboratory →",
+                "cta_link": "?page=experiments"
+            },
+            {
+                "stat": "25",
+                "stat_label": "Concept Nodes",
+                "tag": "Knowledge Graph",
+                "title": "Interactive Topological Knowledge & Concept Pre-Requisites",
+                "desc": "A linked topological knowledge graph connecting circuit components, semiconductor physics, formulas, and troubleshooting steps to deliver contextual adaptive viva grading.",
+                "badges": ["Formula Linking", "Interactive Vis.js Graph", "Automated Viva Grading Engine"],
+                "cta_text": "Launch Interactive Lab →",
+                "cta_link": "?page=experiments"
+            }
+        ]
 
-// Initial selection
-selectNode('photo');
-</script>
+        if "metric_slide_idx" not in st.session_state:
+            st.session_state.metric_slide_idx = 0
 
-</body>
-</html>
-"""
-    st.components.v1.html(showcase_html, height=400)
+        curr_idx = st.session_state.metric_slide_idx
+        slide = METRIC_SLIDES[curr_idx]
+
+        # ── 1. Big Center Spotlight Card ──
+        badges_html = "".join([f'<span class="spotlight-tag-item">{b}</span>' for b in slide["badges"]])
+
+        st.markdown(f"""
+        <div class="spotlight-card">
+            <div class="spotlight-stat-box">
+                <div class="spotlight-stat-num">{slide["stat"]}</div>
+                <div class="spotlight-stat-label">{slide["stat_label"]}</div>
+            </div>
+            <div class="spotlight-info">
+                <div class="spotlight-header">
+                    <span class="spotlight-pill">{slide["tag"]}</span>
+                    <span class="spotlight-index">0{curr_idx + 1} / 04</span>
+                </div>
+                <h3 class="spotlight-title">{slide["title"]}</h3>
+                <p class="spotlight-desc">{slide["desc"]}</p>
+                <div class="spotlight-tags">{badges_html}</div>
+                <div style="margin-top:6px;">
+                    <a href="{slide['cta_link']}" target="_self" style="font-family:'DM Sans',sans-serif;font-size:12.5px;font-weight:600;color:#ffffff;background:#2563eb;padding:7px 18px;border-radius:6px;text-decoration:none;display:inline-flex;align-items:center;transition:background 0.15s ease;">
+                        {slide['cta_text']}
+                    </a>
+                </div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── 2. Carousel Thumbnails Row / Selector ──
+        col_t1, col_t2, col_t3, col_t4 = st.columns(4)
+        thumb_cols = [col_t1, col_t2, col_t3, col_t4]
+        thumb_titles = ["Curriculum (80+)", "AI Models (4)", "Fault Classes (8)", "Knowledge (25 Nodes)"]
+
+        def _select_metric_slide(i):
+            st.session_state.metric_slide_idx = i
+
+        for idx, (t_col, t_title) in enumerate(zip(thumb_cols, thumb_titles)):
+            with t_col:
+                is_active = (idx == curr_idx)
+                btn_type = "primary" if is_active else "secondary"
+                st.button(
+                    t_title, 
+                    key=f"btn_slide_{idx}", 
+                    use_container_width=True, 
+                    type=btn_type,
+                    on_click=_select_metric_slide,
+                    args=(idx,)
+                )
+
+        # ── Divider with Proper Spacing ──
+        st.markdown('<div style="height:1px; background:#27272a; margin:52px 0 36px 0;"></div>', unsafe_allow_html=True)
+
+        # ── 3. Platform Capabilities Deck ──
+        st.markdown("""
+        <div style="margin-bottom: 22px;">
+            <h2 style="font-family:'Poppins',sans-serif; font-size:clamp(20px, 2.5vw, 24px); font-weight:700; color:#fafafa; margin:0 0 6px 0; letter-spacing:-0.5px;">Core AI Platform Capabilities</h2>
+            <p style="font-family:'DM Sans',sans-serif; font-size:13.5px; color:#71717a; margin:0;">Multi-modal AI pipelines powering automated grading, circuit validation, and real-time laboratory assistance.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        col_c1, col_c2, col_c3, col_c4 = st.columns(4)
+        with col_c1:
+            st.markdown("""
+            <div class="feat-card">
+                <h5 style="color:#fafafa; margin-bottom:8px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600;">Fault Diagnosis</h5>
+                <p style="font-size:12.5px; color:#71717a; line-height:1.55; margin:0;">
+                    Hybrid logic checking against Random Forest and Deep MLP fault estimators to diagnose cutoff, saturation, and droop.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_c2:
+            st.markdown("""
+            <div class="feat-card">
+                <h5 style="color:#fafafa; margin-bottom:8px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600;">Computer Vision</h5>
+                <p style="font-size:12.5px; color:#71717a; line-height:1.55; margin:0;">
+                    Scans breadboard wiring rows and matches component connectivity matrices using YOLOv8 bounding boxes.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_c3:
+            st.markdown("""
+            <div class="feat-card">
+                <h5 style="color:#fafafa; margin-bottom:8px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600;">Waveform Analyzer</h5>
+                <p style="font-size:12.5px; color:#71717a; line-height:1.55; margin:0;">
+                    Applies OpenCV HSV filter masking to trace CRO screenshot signals and isolate clipping distortion.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+        with col_c4:
+            st.markdown("""
+            <div class="feat-card">
+                <h5 style="color:#fafafa; margin-bottom:8px; font-family:'Poppins',sans-serif; font-size:15px; font-weight:600;">Digital Twin</h5>
+                <p style="font-size:12.5px; color:#71717a; line-height:1.55; margin:0;">
+                    Simulates real-time electrical output voltages, Bode plots, and load lines matching SPICE formulations.
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── ROUTE 2: DEDICATED EXPERIMENTS PAGE ──────────────────────────────────
+    elif st.session_state.current_page == "experiments":
+
+        # ── Global Page CSS Overrides for Experiments ─────────────────────────
+        st.markdown("""
+        <style>
+        /* ── Experiments Header Banner ── */
+        .exp-header-banner {
+            padding: 28px 52px 20px 52px;
+            background: #09090b;
+            border-bottom: 1px solid #27272a;
+            margin-bottom: 0px;
+        }
+
+        /* ── Notion-Style Pill Tabs (Both Semester & Lab Courses) ── */
+        [data-baseweb="tab-list"] {
+            padding-left: 52px !important;
+            padding-right: 52px !important;
+            padding-top: 14px !important;
+            padding-bottom: 8px !important;
+            gap: 8px !important;
+            background: #09090b !important;
+            border-bottom: none !important;
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+        }
+        [data-baseweb="tab-list"]::-webkit-scrollbar {
+            display: none !important;
+        }
+
+        /* Tab Pill Buttons */
+        button[data-baseweb="tab"] {
+            background-color: #141416 !important;
+            border: 1px solid #27272a !important;
+            border-radius: 8px !important;
+            padding: 7px 16px !important;
+            color: #71717a !important;
+            font-family: 'DM Sans', sans-serif !important;
+            font-size: 13px !important;
+            font-weight: 500 !important;
+            transition: all 0.15s ease !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            margin: 0 !important;
+        }
+        button[data-baseweb="tab"]:hover {
+            border-color: #3b82f6 !important;
+            color: #e4e4e7 !important;
+            background-color: #18181b !important;
+        }
+        button[data-baseweb="tab"][aria-selected="true"] {
+            background-color: #1e1e24 !important;
+            border-color: #3b82f6 !important;
+            color: #ffffff !important;
+            font-weight: 600 !important;
+            box-shadow: 0 0 0 1px rgba(59,130,246,0.3) !important;
+        }
+
+        /* Suppress default Streamlit tab borders & lines */
+        [data-baseweb="tab-border"],
+        [data-baseweb="tab-highlight"] {
+            display: none !important;
+            height: 0 !important;
+        }
+
+        /* Zero out tab panel margins/paddings */
+        [data-baseweb="tab-panel"] {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        [data-baseweb="tab-panel"] > div:first-child {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* ── Experiment Count & Info Bar ── */
+        .exp-count-bar {
+            padding: 10px 52px 14px 52px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: #71717a;
+        }
+        .exp-count-badge {
+            background: #18181b;
+            border: 1px solid #27272a;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #a1a1aa;
+            font-weight: 500;
+        }
+
+        /* ── Experiment Cards Grid ── */
+        .exp-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            padding: 0 52px 48px 52px;
+            box-sizing: border-box;
+        }
+
+        /* ── Card Styling ── */
+        .exp-card-item {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 12px;
+            min-height: 220px;
+            box-sizing: border-box;
+            transition: border-color 0.2s ease, transform 0.15s ease;
+        }
+        .exp-card-item:hover {
+            border-color: #3b82f6;
+        }
+
+        /* ── Launch Button (Pure White text, Blue bg) ── */
+        .exp-launch-btn {
+            font-family: 'DM Sans', sans-serif !important;
+            font-size: 12.5px !important;
+            font-weight: 600 !important;
+            color: #ffffff !important;
+            background: #2563eb !important;
+            padding: 7px 16px !important;
+            border-radius: 6px !important;
+            text-decoration: none !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 4px !important;
+            transition: background 0.15s ease !important;
+        }
+        .exp-launch-btn:hover {
+            background: #1d4ed8 !important;
+            color: #ffffff !important;
+            text-decoration: none !important;
+        }
+
+        /* ── Mobile Responsive (< 768px) ── */
+        @media (max-width: 768px) {
+            .exp-header-banner {
+                padding: 20px 18px 16px 18px !important;
+            }
+            [data-baseweb="tab-list"] {
+                padding-left: 18px !important;
+                padding-right: 18px !important;
+                gap: 6px !important;
+            }
+            button[data-baseweb="tab"] {
+                padding: 6px 12px !important;
+                font-size: 12px !important;
+            }
+            .exp-count-bar {
+                padding: 8px 18px 12px 18px !important;
+            }
+            .exp-cards-grid {
+                grid-template-columns: 1fr !important;
+                padding: 0 18px 36px 18px !important;
+                gap: 12px !important;
+            }
+            .exp-card-item {
+                padding: 16px !important;
+            }
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # ── Experiments Header Banner ─────────────────────────────────────────
+        st.markdown("""
+        <div class="exp-header-banner">
+            <a href="?page=home" target="_self" style="font-family:'DM Sans',sans-serif;color:#3b82f6;text-decoration:none;font-size:13px;font-weight:500;display:inline-flex;align-items:center;gap:4px;margin-bottom:8px;">
+                ← Back to Home
+            </a>
+            <h1 style="font-family:'Poppins',sans-serif;font-size:clamp(22px,3.5vw,34px);font-weight:700;color:#fafafa;margin:4px 0 4px 0;letter-spacing:-0.8px;">Experiments</h1>
+            <p style="font-family:'DM Sans',sans-serif;color:#a1a1aa;font-size:clamp(13px,1.2vw,14.5px);margin:0;">Semester-Wise Laboratory Curriculum &amp; AI-Powered Interactive Workspaces</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # ── Semester Tabs (Notion-Style Pills) ────────────────────────────────
+        sem_keys = ["Semester I", "Semester III", "Semester IV", "Semester V", "Semester VI", "Semester VII"]
+        sem_tabs = st.tabs(sem_keys)
+
+        db_exps = get_all_experiments()
+
+        for sem_tab, sem_key in zip(sem_tabs, sem_keys):
+            with sem_tab:
+                courses = ECE_SYLLABUS.get(sem_key, {})
+                if not courses:
+                    st.markdown(f'<div style="padding:32px 52px;color:#71717a;font-family:\'DM Sans\',sans-serif;font-size:13.5px;">No laboratory courses cataloged for {sem_key}.</div>', unsafe_allow_html=True)
+                else:
+                    course_codes = list(courses.keys())
+                    course_names = [f"{code} — {courses[code]['name']}" for code in course_codes]
+
+                    # ── Lab Course Tabs (Exact Same Notion-Style Pills as Semester) ──
+                    course_tabs = st.tabs(course_names)
+
+                    for course_tab, course_code in zip(course_tabs, course_codes):
+                        with course_tab:
+                            course_data = courses[course_code]
+                            experiments_list = course_data.get("experiments", [])
+                            total = len(experiments_list)
+
+                            # ── Count Line with Proper Left Padding ──
+                            st.markdown(
+                                f'<div class="exp-count-bar">'
+                                f'<span class="exp-count-badge">{total} experiment{"s" if total != 1 else ""}</span>'
+                                f'<span>in this laboratory</span>'
+                                f'</div>',
+                                unsafe_allow_html=True
+                            )
+
+                            # ── Experiment Cards in Responsive 2-Col Grid ──
+                            cards_inner_html = ""
+                            for exp_idx, exp in enumerate(experiments_list, 1):
+                                matched_db = find_matching_db_exp(exp, db_exps)
+                                diff = exp.get("difficulty", "Medium")
+                                if diff == "Easy":
+                                    diff_badge = '<span class="badge badge-easy">Easy</span>'
+                                elif diff == "Medium":
+                                    diff_badge = '<span class="badge badge-medium">Medium</span>'
+                                else:
+                                    diff_badge = '<span class="badge badge-hard">Hard</span>'
+
+                                status_badge = '<span class="badge badge-easy" style="background:#14241e;color:#4ade80;border:1px solid #166534;">AI Lab Active</span>'
+
+                                if matched_db:
+                                    l_id = quote(matched_db['id'])
+                                    l_title = quote(matched_db['title'])
+                                else:
+                                    sem_num = sem_key.split()[-1]
+                                    roman_map = {"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8}
+                                    sem_digit = roman_map.get(sem_num, 1)
+                                    l_id = quote(f"sem{sem_digit}_{course_code}_exp{exp_idx}")
+                                    l_title = quote(exp['title'])
+
+                                components_str = ", ".join(exp.get("components", ["Standard Bench Equipment"]))
+                                aim_str = exp.get("aim", "")
+
+                                cards_inner_html += f"""
+<div class="exp-card-item">
+  <div>
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">{diff_badge} {status_badge}</div>
+    <h4 style="font-family:'Poppins',sans-serif;font-size:15.5px;font-weight:600;color:#fafafa;margin:0 0 8px 0;line-height:1.35;">{exp['title']}</h4>
+    <p style="font-family:'DM Sans',sans-serif;color:#a1a1aa;font-size:12.5px;margin:0 0 8px 0;line-height:1.45;"><b>Aim:</b> {aim_str}</p>
+    <p style="font-family:'DM Sans',sans-serif;color:#71717a;font-size:11.5px;margin:0;"><b>Components:</b> {components_str}</p>
+  </div>
+  <div style="border-top:1px solid #27272a;padding-top:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <span style="font-family:'DM Sans',sans-serif;font-size:12px;color:#71717a;">&#x23f1;&#xfe0f; Duration: <b style="color:#e4e4e7;">{exp['time']}</b></span>
+    <a href="?page=experiments&_launch={l_id}&_title={l_title}" target="_self" class="exp-launch-btn">Launch AI Workspace &#8594;</a>
+  </div>
+</div>"""
+
+                            st.markdown(f'<div class="exp-cards-grid">{cards_inner_html}</div>', unsafe_allow_html=True)
+
+
+
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # ── WORKSPACE WINDOW: EXPERIMENT ACTIVE ──────────────────────────────────────
@@ -1531,8 +1447,113 @@ else:
     if not exp_detail:
         st.error("Failed to retrieve experiment details. Please try returning to the catalog.")
     else:
-        st.markdown(f'<h2>Active Lab: <span class="glow-text">{exp_detail["title"]}</span></h2>', unsafe_allow_html=True)
-        st.caption(f"Code: {exp_detail.get('lab_code')} · {exp_detail.get('lab_name')} · Semester {exp_detail.get('semester')}")
+        # ── Workspace Global CSS Overrides for Minimalist Report Aesthetic ──
+        st.markdown("""
+        <style>
+        .active-workspace-wrap {
+            padding: 24px 52px 64px 52px;
+            box-sizing: border-box;
+        }
+        @media (max-width: 768px) {
+            .active-workspace-wrap {
+                padding: 16px 18px 36px 18px !important;
+            }
+        }
+        .report-card {
+            background: #141416;
+            border: 1px solid #27272a;
+            border-radius: 10px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-sizing: border-box;
+        }
+        .report-section-overline {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 11px;
+            font-weight: 700;
+            color: #60a5fa;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+        .report-card-title {
+            font-family: 'Poppins', sans-serif;
+            font-size: 17px;
+            font-weight: 600;
+            color: #fafafa;
+            margin: 0 0 14px 0;
+            line-height: 1.35;
+        }
+        .step-callout {
+            background: #18181b;
+            border: 1px solid #27272a;
+            border-left: 3px solid #3b82f6;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            color: #a1a1aa;
+            line-height: 1.55;
+        }
+        .step-num-tag {
+            font-family: 'DM Mono', monospace;
+            font-weight: 700;
+            font-size: 11px;
+            color: #60a5fa;
+            margin-right: 6px;
+        }
+
+        /* ── Workspace tab navbar: 52px L/R padding ── */
+        [data-baseweb="tab-list"] {
+            padding-left: 52px !important;
+            padding-right: 52px !important;
+        }
+        @media (max-width: 768px) {
+            [data-baseweb="tab-list"] {
+                padding-left: 18px !important;
+                padding-right: 18px !important;
+            }
+        }
+
+        /* ── Workspace tab panels: 52px L/R padding (injected only in workspace, not experiments page) ── */
+        [data-baseweb="tab-panel"] {
+            padding-left: 52px !important;
+            padding-right: 52px !important;
+            padding-top: 12px !important;
+            padding-bottom: 48px !important;
+        }
+        @media (max-width: 768px) {
+            [data-baseweb="tab-panel"] {
+                padding-left: 18px !important;
+                padding-right: 18px !important;
+                padding-top: 8px !important;
+                padding-bottom: 32px !important;
+            }
+        }
+        </style>
+        <div class="active-workspace-wrap">
+        """, unsafe_allow_html=True)
+
+        # ── Minimalist Academic Lab Report Header ──
+        lab_code = exp_detail.get('lab_code', 'ECE-LAB')
+        semester = exp_detail.get('semester', 1)
+        lab_name = exp_detail.get('lab_name', 'Electronics & Communication Laboratory')
+        exp_title = exp_detail.get('title', 'Experiment Workspace')
+
+        st.markdown(f"""
+        <div style="background:#111113; border:1px solid #27272a; border-radius:12px; padding:24px 28px; margin-bottom:24px;">
+            <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:10px;">
+                <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                    <span style="font-family:'DM Sans',sans-serif; font-size:11px; font-weight:700; color:#60a5fa; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.25); padding:3px 10px; border-radius:4px; text-transform:uppercase; letter-spacing:0.8px;">LABORATORY REPORT</span>
+                    <span style="font-family:'DM Sans',sans-serif; font-size:12.5px; color:#a1a1aa;">Code: <b style="color:#fafafa;">{lab_code}</b> &nbsp;·&nbsp; Semester <b style="color:#fafafa;">{semester}</b></span>
+                </div>
+                <a href="?page=experiments&_exit=true" target="_self" style="font-family:'DM Sans',sans-serif; font-size:12px; font-weight:600; color:#f87171; background:rgba(248,113,113,0.1); border:1px solid rgba(248,113,113,0.3); padding:4px 12px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s ease;">✕ Exit Workspace</a>
+            </div>
+            <h2 style="font-family:'Poppins',sans-serif; font-size:clamp(20px, 3vw, 28px); font-weight:700; color:#fafafa; margin:0 0 6px 0; letter-spacing:-0.5px;">{exp_title}</h2>
+            <p style="font-family:'DM Sans',sans-serif; font-size:13.5px; color:#71717a; margin:0;">{lab_name} — Department of ECE, BIT Mesra</p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # ── Setup Workspace Navigation tabs ──
         tab_t, tab_proc, tab_cv, tab_viva, tab_kg, tab_analytics, tab_rag = st.tabs([
@@ -1549,37 +1570,48 @@ else:
         with tab_t:
             col_aim, col_info = st.columns([3, 2])
             with col_aim:
-                st.subheader("Aim")
+                st.markdown("""
+                <div class="report-card">
+                    <div class="report-section-overline">SECTION 01 · OBJECTIVE &amp; THEORETICAL SUMMARY</div>
+                    <h3 class="report-card-title">Aim &amp; Theoretical Background</h3>
+                """, unsafe_allow_html=True)
                 st.info(exp_detail.get("aim", ""))
+                st.markdown(f'<p style="font-family:\'DM Sans\',sans-serif;font-size:13.5px;color:#a1a1aa;line-height:1.65;margin:12px 0;">{exp_detail.get("theory", {}).get("summary", "")}</p>', unsafe_allow_html=True)
                 
-                st.subheader("Theoretical Summary")
-                st.write(exp_detail.get("theory", {}).get("summary", ""))
-                
-                st.subheader("Core Concepts")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:16px 0 8px 0;">Core Concepts</h4>', unsafe_allow_html=True)
                 for c in exp_detail.get("theory", {}).get("key_concepts", []):
                     st.markdown(f"- **{c}**")
+                st.markdown('</div>', unsafe_allow_html=True)
                     
             with col_info:
-                st.subheader("Formulas")
+                st.markdown("""
+                <div class="report-card">
+                    <div class="report-section-overline">SECTION 02 · MATHEMATICAL FORMULAS &amp; INVENTORY</div>
+                    <h3 class="report-card-title">Formulas &amp; Component Specs</h3>
+                """, unsafe_allow_html=True)
                 for f in exp_detail.get("theory", {}).get("key_formulas", []):
                     st.markdown(
                         f'<div class="formula-block">'
                         f'<strong>{f["name"]}</strong><br>'
-                        f'<code style="color:#f472b6;">{f["formula"]}</code><br>'
-                        f'<span style="color:#94a3b8;font-size:12px">{f.get("variables", "")}</span>'
+                        f'<code style="color:#60a5fa;">{f["formula"]}</code><br>'
+                        f'<span style="color:#71717a;font-size:12px">{f.get("variables", "")}</span>'
                         f'</div>',
                         unsafe_allow_html=True
                     )
                 
-                st.subheader("Component Requirements")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:16px 0 8px 0;">Required Components</h4>', unsafe_allow_html=True)
                 for c in exp_detail.get("components", []):
                     st.markdown(f"• **{c['name']}** — {c.get('spec', '')} ×{c.get('quantity', 1)}")
-            
-            st.divider()
+                st.markdown('</div>', unsafe_allow_html=True)
             
             # Digital Twin Simulator
-            st.subheader("Spice Digital Twin Simulator")
-            st.write("Tune component parameters to predict circuit performance outcomes dynamically.")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 03 · SPICE DIGITAL TWIN SIMULATOR</div>
+                <h3 class="report-card-title">Circuit Parameter Solver &amp; Waveform Predictor</h3>
+                <p style="font-family:'DM Sans',sans-serif;font-size:13px;color:#71717a;margin:0 0 16px 0;">Tune component parameters to predict output voltages, Bode plots, and DC load lines dynamically.</p>
+            """, unsafe_allow_html=True)
+
             
             col_params, col_predict = st.columns([2, 3])
             
@@ -1682,18 +1714,29 @@ else:
                             st.error("⏳ Prediction solver timed out. The server might be waking up. Please retry.")
                         except Exception as e:
                             st.error(f"Failed to connect to digital twin solver: {e}")
+                st.markdown('</div>', unsafe_allow_html=True)
                                 
         # ── TAB: Step-by-Step Procedure ──
         with tab_proc:
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 04 · EXPERIMENTAL PROCEDURE &amp; OBSERVATION</div>
+                <h3 class="report-card-title">Laboratory Execution &amp; Data Logging</h3>
+            """, unsafe_allow_html=True)
             st.info(f"**AIM:** {exp_detail.get('aim')}")
             col_proc, col_exp = st.columns([3, 2])
             
             with col_proc:
-                st.subheader("Procedure Instructions")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:14px 0 10px 0;">Procedure Steps</h4>', unsafe_allow_html=True)
                 for i, step in enumerate(exp_detail.get("procedure", []), 1):
-                    st.markdown(f"**Step {i}:** {step}")
+                    st.markdown(
+                        f'<div class="step-callout">'
+                        f'<span class="step-num-tag">STEP {i:02d}</span> {step}'
+                        f'</div>',
+                        unsafe_allow_html=True
+                    )
                     
-                st.subheader("Observation Table Headers")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:18px 0 10px 0;">Observation Table Format</h4>', unsafe_allow_html=True)
                 obs = exp_detail.get("observations", {})
                 if obs.get("table_headers"):
                     st.table([obs["table_headers"]])
@@ -1702,22 +1745,28 @@ else:
                     st.info(f"Graph requirements: {obs['what_to_plot']}")
                     
             with col_exp:
-                st.subheader("Expected Results")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:14px 0 10px 0;">Expected Results</h4>', unsafe_allow_html=True)
                 er = exp_detail.get("expected_results", {})
                 st.write(er.get("description", ""))
                 
                 for tv in er.get("typical_values", []):
                     st.metric(tv["parameter"], f"{tv['expected']} {tv.get('unit', '')}")
                     
-                st.subheader("Common Troubleshooting Indicators")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:18px 0 10px 0;">Common Troubleshooting Indicators</h4>', unsafe_allow_html=True)
                 for err in exp_detail.get("common_errors", []):
                     with st.expander(f"Symptom: {err['symptom']}"):
                         st.write(f"**Potential Causes:** {', '.join(err.get('causes', []))}")
                         st.success(f"**Fix:** {err.get('fix')}")
+            
+            st.markdown('</div>', unsafe_allow_html=True)
                         
         # ── TAB: Fault & CV scan ──
         with tab_cv:
-            st.subheader("Intelligent Circuit Diagnosis Center")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 05 · INTELLIGENT CIRCUIT DIAGNOSTICS &amp; SCANNER</div>
+                <h3 class="report-card-title">Fault Biasing &amp; Vision Inspection Center</h3>
+            """, unsafe_allow_html=True)
             st.write("Compare experimental measurements, analyze CRO screenshots, or run visual breadboard scanning.")
             
             sub_mode = st.radio("Select Diagnostic Tool:", [
@@ -1947,7 +1996,11 @@ else:
                         
         # ── TAB: Adaptive Viva Prep ──
         with tab_viva:
-            st.subheader("Conversational AI Viva Prep")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 06 · ADAPTIVE VIVA EXAMINER &amp; EVALUATION</div>
+                <h3 class="report-card-title">Conversational AI Viva Prep</h3>
+            """, unsafe_allow_html=True)
             
             if "viva_session_id" not in st.session_state:
                 st.session_state.viva_session_id = None
@@ -1960,7 +2013,7 @@ else:
                 
             if not st.session_state.viva_session_id:
                 # Persistent skill dashboard
-                st.markdown("### Student Skill Profile & Mastery Dashboard")
+                st.markdown('<h4 style="font-family:\'Poppins\',sans-serif;font-size:14px;font-weight:600;color:#fafafa;margin:0 0 12px 0;">Student Skill Profile &amp; Mastery Dashboard</h4>', unsafe_allow_html=True)
                 if "skill_profile" not in st.session_state:
                     st.session_state.skill_profile = {
                         "cro": 65.0,
@@ -1981,9 +2034,9 @@ else:
                     col = col_sk1 if key == "cro" else (col_sk2 if key == "diode" else (col_sk3 if key == "amplifier" else col_sk4))
                     with col:
                         st.markdown(
-                            f'<div style="background:#111827; border-radius:10px; padding:18px; border:1px solid rgba(255,255,255,0.05); border-left:5px solid {color}; text-align:center;">'
-                            f'<span style="color:#94a3b8; font-size:12px; font-weight:600;">{label}</span><br>'
-                            f'<span style="font-size:22px; font-weight:700; color:#f1f5f9;">{val:.1f}%</span>'
+                            f'<div style="background:#111113; border-radius:8px; padding:16px; border:1px solid #27272a; border-left:4px solid {color}; text-align:center;">'
+                            f'<span style="color:#71717a; font-size:11.5px; font-weight:600;">{label}</span><br>'
+                            f'<span style="font-size:22px; font-weight:700; color:#fafafa;">{val:.1f}%</span>'
                             f'</div>',
                             unsafe_allow_html=True
                         )
@@ -2142,10 +2195,15 @@ else:
                 if st.button("Restart Viva Session", use_container_width=True):
                     st.session_state.viva_session_id = None
                     st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
                     
         # ── TAB: Knowledge Graph ──
         with tab_kg:
-            st.subheader("Semester-Wise Electronics Knowledge Graph")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 07 · ONTOLOGICAL KNOWLEDGE GRAPH</div>
+                <h3 class="report-card-title">Semester-Wise Electronics Knowledge Graph</h3>
+            """, unsafe_allow_html=True)
             st.write("Drag, zoom, and explore concepts and prerequisite connections in the vis.js network below.")
             
             with st.spinner("Retrieving graph mappings..."):
@@ -2178,10 +2236,15 @@ else:
                             st.error(f"Failed to trace prerequisites: Status {resp.status_code}")
                     except Exception as e:
                         st.error(f"Error tracing prerequisites: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
                     
         # ── TAB: Faculty Analytics ──
         with tab_analytics:
-            st.subheader("Faculty Performance Analytics Dashboard")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 08 · FACULTY PERFORMANCE ANALYTICS</div>
+                <h3 class="report-card-title">Faculty Performance Analytics Dashboard</h3>
+            """, unsafe_allow_html=True)
             st.write("Review student completion rates, common assembly faults, and concept mastery curves.")
             
             with st.spinner("Fetching database statistics..."):
@@ -2219,10 +2282,15 @@ else:
                         st.error(f"Failed to load analytics: Status {resp.status_code}")
                 except Exception as e:
                     st.error(f"Error connecting to analytics engine: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
                 
         # ── TAB: Ask Assistant (RAG) ──
         with tab_rag:
-            st.subheader("RAG Assistant Chat")
+            st.markdown("""
+            <div class="report-card">
+                <div class="report-section-overline">SECTION 09 · DOCUMENTATION &amp; RAG ASSISTANT</div>
+                <h3 class="report-card-title">RAG Assistant Chat</h3>
+            """, unsafe_allow_html=True)
             st.caption(f"Interfacing with experiment context: **{exp_detail['title']}**")
             
             query = st.text_area(
@@ -2253,3 +2321,7 @@ else:
                             st.error("⏳ Assistant request timed out (~45s). If the free-tier backend was sleeping, it has now woken up. Please click 'Send to Assistant' again!")
                         except Exception as e:
                             st.error(f"Failed to communicate with RAG Assistant: {e}")
+            st.markdown('</div>', unsafe_allow_html=True)
+
+        # Close .active-workspace-wrap
+        st.markdown('</div>', unsafe_allow_html=True)
